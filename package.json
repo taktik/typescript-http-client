@@ -1,0 +1,28 @@
+{
+  "name": "typescript-http-client",
+  "version": "0.9.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taktik/typescript-http-client.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/taktik/typescript-http-client/issues"
+  },
+  "scripts": {
+    "prepublish": "npm run build",
+    "build": "tsc"
+  },
+  "homepage": "https://github.com/taktik/typescript-http-client#readme",
+  "dependencies": {
+    "log4javascript": "^1.4.15"
+  },
+  "devDependencies": {
+    "typescript": "^3.1.4"
+  }
+}
