@@ -180,7 +180,7 @@ export namespace httpclient {
 					line = line.trim();
 					if (line.length > 0) {
 						const parts = line.split(': ');
-						if (parts.length > 2) {
+						if (parts.length >= 2) {
 							const header = parts.shift()!;
 							headerMap[header] = parts.join(': ');
 						}
