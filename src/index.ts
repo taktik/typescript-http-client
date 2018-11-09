@@ -1,5 +1,7 @@
+import * as log4javascript from "log4javascript";
 
 export namespace httpclient {
+    const log = log4javascript.getLogger("http.client");
 
 	export interface HttpClient {
 		callForResponse<T>(request: Request): Promise<Response<T>>;
@@ -161,8 +163,10 @@ export namespace httpclient {
 
 	function execute<T>(request:Request):Promise<Response<T>> {
 		return new Promise<Response<T>>((resolve, reject) => {
-			const req = new XMLHttpRequest();
-			req.responseType = request.responseType;
+            log.trace(`Executing request with type=${request.responseType}`);
+
+            const req = new XMLHttpRequest();
+            req.responseType = request.responseType;
 			req.withCredentials = request.withCredentials;
 			req.timeout = request.timeout;
 
@@ -191,10 +195,15 @@ export namespace httpclient {
 
 			const buildResponseAndUpdateRequest = function<T>(req:XMLHttpRequest):Response<T> {
 				request.readyState = req.readyState;
+				let responseBody = req.response;
+                if (typeof responseBody === "string" && (req.responseType === "" || req.responseType === "text") && responseBody.length===req.responseText.length) {
+                    log.trace(`Parsing JSON`);
+                    responseBody = JSON.parse(responseBody);
+                }
 				return {
 					request:request,
 					headers: parseResponseHeaders(req),
-					body:req.response as T,
+					body:responseBody as T,
 					status:req.status,
 					statusText:req.statusText
 				} as Response<T>;
@@ -220,7 +229,8 @@ export namespace httpclient {
 				}
 			};
 			req.open(request.method, request.url);
-			for (const headerName in request.headers) {
+
+            for (const headerName in request.headers) {
 				req.setRequestHeader(headerName, request.headers[headerName]);
 			}
 			req.setRequestHeader('Content-Type', request.contentType);
