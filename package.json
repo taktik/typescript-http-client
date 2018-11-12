@@ -16,7 +16,7 @@
   },
   "scripts": {
     "prepublish": "npm run build",
-    "build": "tsc",
+    "build": "tslint src/* && tsc",
     "tslint": "tslint src/*"
   },
   "homepage": "https://github.com/taktik/typescript-http-client#readme",
