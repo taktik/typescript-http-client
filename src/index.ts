@@ -88,9 +88,9 @@ export namespace httpclient {
            contentType, method, responseType,
            withCredentials, body, headers, timeout
          }: {
-      contentType?: string, method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | string, responseType?: XMLHttpRequestResponseType,
-      withCredentials?: boolean, body?: object | Document | BodyInit | null, headers?: Headers, timeout?: number
-    }): Request {
+           contentType?: string, method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | string, responseType?: XMLHttpRequestResponseType,
+           withCredentials?: boolean, body?: object | Document | BodyInit | null, headers?: Headers, timeout?: number
+         }): Request {
       if (contentType) {
         this.contentType = contentType
       }
