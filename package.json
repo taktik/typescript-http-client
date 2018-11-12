@@ -16,13 +16,17 @@
   },
   "scripts": {
     "prepublish": "npm run build",
-    "build": "tsc"
+    "build": "tslint src/* && tsc",
+    "tslint": "tslint src/*"
   },
   "homepage": "https://github.com/taktik/typescript-http-client#readme",
   "dependencies": {
     "log4javascript": "^1.4.15"
   },
   "devDependencies": {
-    "typescript": "^3.1.4"
+    "tslint": "^5.11.0",
+    "tslint-config-standard": "^8.0.1",
+    "typescript": "^3.1.6",
+    "typescript-eslint-parser": "^20.1.1"
   }
 }
