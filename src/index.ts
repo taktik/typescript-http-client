@@ -84,6 +84,7 @@ export namespace httpclient {
       }
     }
 
+    // noinspection JSUnusedGlobalSymbols
     set ({
           contentType, method, responseType,
           withCredentials, body, headers, timeout
@@ -115,40 +116,48 @@ export namespace httpclient {
       return this
     }
 
+    // noinspection JSUnusedGlobalSymbols
     setContentType (contentType: string): Request {
       this.contentType = contentType
       return this
     }
 
+    // noinspection JSUnusedGlobalSymbols
     setMethod (method: 'GET' | 'POST' | 'PUT' | 'DELETE' | string = 'GET'): Request {
       this.method = method
       return this
     }
 
+    // noinspection JSUnusedGlobalSymbols
     setResponseType (responseType: XMLHttpRequestResponseType) {
       this.responseType = responseType
       return this
     }
 
+    // noinspection JSUnusedGlobalSymbols
     setWithCredentials (withCredentials: boolean) {
       this.withCredentials = withCredentials
       return this
     }
 
+    // noinspection JSUnusedGlobalSymbols
     setBody (body?: object | Document | BodyInit | null) {
       this.body = body
       return this
     }
 
+    // noinspection JSUnusedGlobalSymbols
     setHeaders (headers: Headers) {
       this.headers = headers
       return this
     }
 
+    // noinspection JSUnusedGlobalSymbols
     addHeader (headerName: string, value: string) {
       this.headers[headerName] = value
     }
 
+    // noinspection JSUnusedGlobalSymbols
     setTimeout (timeout: number) {
       this.timeout = timeout
       return this
