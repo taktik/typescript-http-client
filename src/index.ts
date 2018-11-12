@@ -85,12 +85,12 @@ export namespace httpclient {
     }
 
     set ({
-          contentType, method, responseType,
-          withCredentials, body, headers, timeout
-        }: {
-          contentType?: string, method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | string, responseType?: XMLHttpRequestResponseType,
-          withCredentials?: boolean, body?: object | Document | BodyInit | null, headers?: Headers, timeout?: number
-        }): Request {
+           contentType, method, responseType,
+           withCredentials, body, headers, timeout
+         }: {
+      contentType?: string, method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | string, responseType?: XMLHttpRequestResponseType,
+      withCredentials?: boolean, body?: object | Document | BodyInit | null, headers?: Headers, timeout?: number
+    }): Request {
       if (contentType) {
         this.contentType = contentType
       }
@@ -196,7 +196,7 @@ export namespace httpclient {
         return headerMap
       }
 
-      const buildResponseAndUpdateRequest = function <T>(req: XMLHttpRequest): Response<T> {
+      const buildResponseAndUpdateRequest = function <T> (req: XMLHttpRequest): Response<T> {
         request.readyState = req.readyState
         let responseBody = req.response
         if (typeof responseBody === 'string' && (req.responseType === '' || req.responseType === 'text') && responseBody.length === req.responseText.length) {
@@ -212,11 +212,11 @@ export namespace httpclient {
         } as Response<T>
       }
 
-      const rejectRequest = function <T>(req: XMLHttpRequest) {
+      const rejectRequest = function <T> (req: XMLHttpRequest) {
         reject(buildResponseAndUpdateRequest(req))
       }
 
-      const resolveRequest = function <T>(req: XMLHttpRequest) {
+      const resolveRequest = function <T> (req: XMLHttpRequest) {
         resolve(buildResponseAndUpdateRequest(req))
       }
 
@@ -289,12 +289,12 @@ export namespace httpclient {
   }
 
   /*
-    * A filter configuration
-    */
+    A filter configuration
+  */
   export interface FilterConfig {
     /*
-            Return "true" if this filter should be applied to the given call
-        */
+      Return "true" if this filter should be applied to the given call
+    */
     enabled (call: Request): boolean
   }
 
@@ -303,8 +303,8 @@ export namespace httpclient {
   }
 
   /*
-        Factory method
-     */
+    Factory method
+  */
   export function newHttpClient () {
     return new HttpClientImpl()
   }
