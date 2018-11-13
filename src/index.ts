@@ -203,7 +203,9 @@ export namespace httpclient {
         if (request.responseType === 'json'
 	                && typeof responseBody === 'string'
 	                && (req.responseType === '' || req.responseType === 'text')
-	                && responseBody.length === req.responseText.length) {
+	                && responseBody.length === req.responseText.length
+                  && req.responseText.length > 0) {
+          //TODO: if error here around, it isn't bubble up ! Please AB fix it
           log.trace(`Parsing JSON`)
           responseBody = JSON.parse(responseBody)
         }
