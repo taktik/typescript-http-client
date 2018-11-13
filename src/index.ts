@@ -199,7 +199,11 @@ export namespace httpclient {
       const buildResponseAndUpdateRequest = function <T> (req: XMLHttpRequest): Response<T> {
         request.readyState = req.readyState
         let responseBody = req.response
-        if (typeof responseBody === 'string' && (req.responseType === '' || req.responseType === 'text') && responseBody.length === req.responseText.length) {
+				// Some implementations of XMLHttpRequest ignore the "json" responseType
+        if (request.responseType === 'json'
+	                && typeof responseBody === 'string'
+	                && (req.responseType === '' || req.responseType === 'text')
+	                && responseBody.length === req.responseText.length) {
           log.trace(`Parsing JSON`)
           responseBody = JSON.parse(responseBody)
         }
