@@ -4,6 +4,6 @@
 /doc/
 /.idea/
 dist/
-
+/coverage/
 .jsbeautifyrc
 .prettierrc
