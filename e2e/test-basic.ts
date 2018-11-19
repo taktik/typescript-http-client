@@ -8,4 +8,10 @@ describe('httpclient', () => {
       assert.equal(typeof httpClient, 'object')
     })
   })
+  describe('Request', function () {
+    it('should return a function', function () {
+      const request = httpclient.Request
+      assert.equal(typeof request, 'function')
+    })
+  })
 })
