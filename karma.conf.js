@@ -37,7 +37,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       { pattern: "src/**/*.ts" },
-      { pattern: "e2e/**/*.ts" }
+      { pattern: "test/**/*.ts" }
     ],
 
 
@@ -50,7 +50,7 @@ module.exports = function(config) {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       "src/**/*.ts": ["karma-typescript", "coverage"],
-      "e2e/**/*.ts": ["karma-typescript"],
+      "test/**/*.ts": ["karma-typescript"],
     },
 
 
@@ -91,6 +91,15 @@ module.exports = function(config) {
 
     // Concurrency level
     // how many browser should be started simultaneous
-    concurrency: Infinity
+    concurrency: Infinity,
+
+    customLaunchers: {
+      ChromeHeadlessNoSandbox: {
+        base: 'ChromeHeadless',
+        flags: [
+          '--no-sandbox', // required to run without privileges in docker
+        ]
+      }
+    },
   })
 }
