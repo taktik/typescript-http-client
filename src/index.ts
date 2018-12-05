@@ -169,7 +169,6 @@ export namespace httpclient {
 			log.trace(`Executing request with type=${request.responseType}`)
 
 			const req = new XMLHttpRequest()
-			req.responseType = request.responseType
 			req.withCredentials = request.withCredentials
 			req.timeout = request.timeout
 
@@ -238,6 +237,7 @@ export namespace httpclient {
 				}
 			}
 			req.open(request.method, request.url)
+			req.responseType = request.responseType
 
 			for (const headerName in request.headers) {
 				req.setRequestHeader(headerName, request.headers[headerName])
