@@ -166,11 +166,24 @@ export namespace httpclient {
 
 	function execute<T>(request: Request): Promise<Response<T>> {
 		return new Promise<Response<T>>((resolve, reject) => {
-			log.trace(`Executing request with type=${request.responseType}`)
+			if (log.isTraceEnabled()) {
+				let message = `${request.method} ${request.url}`
+				if (request.body) {
+					if (typeof request.body === 'string') {
+						message += ` --> ${request.body}`
+					} else if (!(request.body instanceof Blob ||
+						request.body instanceof ArrayBuffer
+						|| request.body instanceof ReadableStream
+						|| request.body instanceof Document)) {
+						message += ` --> ${JSON.stringify(request.body)}`
+					}
+				}
+				log.trace(message)
+			}
 
-			const req = new XMLHttpRequest()
-			req.withCredentials = request.withCredentials
-			req.timeout = request.timeout
+			const xhr = new XMLHttpRequest()
+			xhr.withCredentials = request.withCredentials
+			xhr.timeout = request.timeout
 
 			const parseResponseHeaders = function(request: XMLHttpRequest): Headers {
 				// Get the raw header string
@@ -225,24 +238,24 @@ export namespace httpclient {
 				resolve(buildResponseAndUpdateRequest(req))
 			}
 
-			req.onerror = () => rejectRequest(req)
-			req.onabort = req.onerror
-			req.ontimeout = req.onerror
-			req.onload = () => {
-				if (req.status >= 200 && req.status < 400) {
+			xhr.onerror = () => rejectRequest(xhr)
+			xhr.onabort = xhr.onerror
+			xhr.ontimeout = xhr.onerror
+			xhr.onload = () => {
+				if (xhr.status >= 200 && xhr.status < 400) {
 					// Success!
-					resolveRequest(req)
+					resolveRequest(xhr)
 				} else {
-					rejectRequest(req)
+					rejectRequest(xhr)
 				}
 			}
-			req.open(request.method, request.url)
-			req.responseType = request.responseType
+			xhr.open(request.method, request.url)
+			xhr.responseType = request.responseType
 
 			for (const headerName in request.headers) {
-				req.setRequestHeader(headerName, request.headers[headerName])
+				xhr.setRequestHeader(headerName, request.headers[headerName])
 			}
-			req.setRequestHeader('Content-Type', request.contentType)
+			xhr.setRequestHeader('Content-Type', request.contentType)
 
 			let body = request.body
 			// Auto-stringify json objects
@@ -250,7 +263,7 @@ export namespace httpclient {
 				body = JSON.stringify(body)
 			}
 
-			req.send(body as (Document | BodyInit | null))
+			xhr.send(body as (Document | BodyInit | null))
 		})
 	}
 
