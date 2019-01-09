@@ -277,7 +277,7 @@ export namespace httpclient {
 	}
 
 	class FilterChainImpl implements FilterChain {
-		constructor(readonly filters: InstalledFilter[], readonly fromIndex: number = 0) {
+		constructor(readonly filters: InstalledFilter[], readonly fromIndex: number = 0, readonly callBack: (request: Request) => Promise<Response<any>> = execute) {
 		}
 
 		async doFilter(request: Request): Promise<Response<any>> {
@@ -285,10 +285,11 @@ export namespace httpclient {
 			// Find next filter to apply
 			while (index < this.filters.length) {
 				const filter = this.filters[index]
-				if (filter.config && !filter.config.enabled(request)) {
-					index++
-				} else {
+				if (!filter.config || filter.config.enabled(request)) {
+					// We have found a filter to apply
 					break
+				} else {
+					index++
 				}
 			}
 			if (index < this.filters.length) {
@@ -297,12 +298,21 @@ export namespace httpclient {
 			} else {
 				// We are at the end of the filter chain,
 				// we can execute the call
-				return execute(request)
+				return this.callBack(request)
 			}
 		}
 	}
 
-	class InstalledFilter {
+	export class FilterCollection implements Filter {
+		constructor(readonly filters: InstalledFilter[]) {
+		}
+
+		doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain): Promise<httpclient.Response<any>> {
+			return new FilterChainImpl(this.filters, 0, filterChain.doFilter).doFilter(call)
+		}
+	}
+
+	export class InstalledFilter {
 		constructor(readonly filter: Filter, readonly config?: FilterConfig) {
 		}
 	}
