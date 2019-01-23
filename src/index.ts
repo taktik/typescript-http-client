@@ -52,6 +52,7 @@ export namespace httpclient {
 		headers: Headers = {}
 		timeout: number = 30000
 		readyState: number = 0
+		properties: {[key: string]: any} = {}
 
 		constructor(url: string, {
 			contentType, method, responseType,
@@ -154,6 +155,15 @@ export namespace httpclient {
 			return this
 		}
 
+		setProperty (key: string, value: any) {
+			this.properties[key] = value
+			return this
+		}
+
+		getProperty (key: string): any {
+			return this.properties[key]
+		}
+
 	}
 
 	export interface Response<T> {
@@ -162,23 +172,46 @@ export namespace httpclient {
 		statusText: string
 		headers: Headers
 		body: T
+		properties: {[key: string]: any}
+		setProperty(key: string, value: any): void
+		getProperty(key: string): any
+	}
+
+	class ResponseImpl<T> implements Response<T> {
+		readonly properties: {[key: string]: any} = {}
+		constructor(readonly request: Request,
+					 readonly status: number,
+					 readonly statusText: string,
+					 readonly headers: Headers,
+					 readonly body: T
+					 ) {
+		}
+
+		setProperty(key: string, value: any) {
+			this.properties[key] = value
+			return this
+		}
+
+		getProperty(key: string): any {
+			return this.properties[key]
+		}
 	}
 
 	function execute<T>(request: Request): Promise<Response<T>> {
 		return new Promise<Response<T>>((resolve, reject) => {
+			let traceMessage: String | undefined
 			if (log.isTraceEnabled()) {
-				let message = `${request.method} ${request.url}`
+				traceMessage = `${request.method} ${request.url}`
 				if (request.body) {
 					if (typeof request.body === 'string') {
-						message += ` --> ${request.body}`
+						traceMessage += ` --> ${request.body}`
 					} else if (!(request.body instanceof Blob ||
 						request.body instanceof ArrayBuffer
 						|| request.body instanceof ReadableStream
 						|| request.body instanceof Document)) {
-						message += ` --> ${JSON.stringify(request.body)}`
+						traceMessage += ` --> ${JSON.stringify(request.body)}`
 					}
 				}
-				log.trace(message)
 			}
 
 			const xhr = new XMLHttpRequest()
@@ -221,13 +254,12 @@ export namespace httpclient {
 					log.trace(`Parsing JSON`)
 					responseBody = JSON.parse(responseBody)
 				}
-				return {
-					request: request,
-					headers: parseResponseHeaders(req),
-					body: responseBody as T,
-					status: req.status,
-					statusText: req.statusText
-				} as Response<T>
+				return new ResponseImpl<T>(request,
+					req.status,
+					req.statusText,
+					parseResponseHeaders(req),
+					responseBody as T
+				)
 			}
 
 			const rejectRequest = function <T>(req: XMLHttpRequest) {
@@ -242,6 +274,9 @@ export namespace httpclient {
 			xhr.onabort = xhr.onerror
 			xhr.ontimeout = xhr.onerror
 			xhr.onload = () => {
+				if (log.isTraceEnabled()) {
+					log.trace(xhr.status + ': ' + traceMessage)
+				}
 				if (xhr.status >= 200 && xhr.status < 400) {
 					// Success!
 					resolveRequest(xhr)
@@ -308,7 +343,7 @@ export namespace httpclient {
 		}
 
 		doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain): Promise<httpclient.Response<any>> {
-			return new FilterChainImpl(this.filters, 0, filterChain.doFilter).doFilter(call)
+			return new FilterChainImpl(this.filters, 0, request => filterChain.doFilter(request)).doFilter(call)
 		}
 	}
 
