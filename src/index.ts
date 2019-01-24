@@ -8,7 +8,7 @@ export namespace httpclient {
 
 		call<T>(request: Request): Promise<T>
 
-		addFilter(filter: Filter, config?: FilterConfig): FilterRegistration
+		addFilter(filter: Filter, name: string, config?: FilterConfig): FilterRegistration
 	}
 
 	class HttpClientImpl implements HttpClient {
@@ -18,8 +18,8 @@ export namespace httpclient {
 			this._filters = []
 		}
 
-		addFilter(filter: Filter, config?: FilterConfig): FilterRegistration {
-			const installedFilter = new InstalledFilter(filter, config)
+		addFilter(filter: Filter, name: string, config?: FilterConfig): FilterRegistration {
+			const installedFilter = new InstalledFilter(filter, name, config)
 			const filters = this._filters
 			filters.push(installedFilter)
 			return {
@@ -317,8 +317,10 @@ export namespace httpclient {
 				}
 			}
 			if (index < this.filters.length) {
+				const installedFilter = this.filters[index]
 				// We found a filter to apply
-				return this.filters[index].filter.doFilter(request, new FilterChainImpl(this.filters, index + 1))
+				log.trace('Applying filter ' + installedFilter.name)
+				return installedFilter.filter.doFilter(request, new FilterChainImpl(this.filters, index + 1))
 			} else {
 				// We are at the end of the filter chain,
 				// we can execute the call
@@ -337,7 +339,7 @@ export namespace httpclient {
 	}
 
 	export class InstalledFilter {
-		constructor(readonly filter: Filter, readonly config?: FilterConfig) {
+		constructor(readonly filter: Filter, readonly name: string, readonly config?: FilterConfig) {
 		}
 	}
 
