@@ -320,7 +320,7 @@ export namespace httpclient {
 				const installedFilter = this.filters[index]
 				// We found a filter to apply
 				log.trace('Applying filter ' + installedFilter.name)
-				return installedFilter.filter.doFilter(request, new FilterChainImpl(this.filters, index + 1))
+				return installedFilter.filter.doFilter(request, new FilterChainImpl(this.filters, index + 1, this.callBack))
 			} else {
 				// We are at the end of the filter chain,
 				// we can execute the call
