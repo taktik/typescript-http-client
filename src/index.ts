@@ -166,18 +166,7 @@ export namespace httpclient {
 
 	}
 
-	export interface Response<T> {
-		request: Request
-		status: number
-		statusText: string
-		headers: Headers
-		body: T
-		properties: {[key: string]: any}
-		setProperty(key: string, value: any): void
-		getProperty(key: string): any
-	}
-
-	class ResponseImpl<T> implements Response<T> {
+	export class Response<T> {
 		readonly properties: {[key: string]: any} = {}
 		constructor(readonly request: Request,
 					 readonly status: number,
@@ -254,7 +243,7 @@ export namespace httpclient {
 					log.trace(`Parsing JSON`)
 					responseBody = JSON.parse(responseBody)
 				}
-				return new ResponseImpl<T>(request,
+				return new Response<T>(request,
 					req.status,
 					req.statusText,
 					parseResponseHeaders(req),
