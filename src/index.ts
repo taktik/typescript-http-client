@@ -208,25 +208,26 @@ export namespace httpclient {
 			xhr.timeout = request.timeout
 
 			const parseResponseHeaders = function(request: XMLHttpRequest): Headers {
-				// Get the raw header string
-				const headers = request.getAllResponseHeaders()
-
-				// Convert the header string into an array
-				// of individual headers
-				const arr = headers.trim().split(/[\r\n]+/)
-
 				// Create a map of header names to values
 				const headerMap: Headers = {}
-				arr.forEach(function(line) {
-					line = line.trim()
-					if (line.length > 0) {
-						const parts = line.split(': ')
-						if (parts.length >= 2) {
-							const header = parts.shift()!
-							headerMap[header] = parts.join(': ')
+				// Get the raw header string
+				const headers = request.getAllResponseHeaders()
+				if (headers) {
+					// Convert the header string into an array
+					// of individual headers
+					const arr = headers.trim().split(/[\r\n]+/)
+
+					arr.forEach(function(line) {
+						line = line.trim()
+						if (line.length > 0) {
+							const parts = line.split(': ')
+							if (parts.length >= 2) {
+								const header = parts.shift()!
+								headerMap[header] = parts.join(': ')
+							}
 						}
-					}
-				})
+					})
+				}
 				return headerMap
 			}
 
@@ -241,7 +242,11 @@ export namespace httpclient {
 					&& req.responseText.length > 0) {
 					// TODO: if error here around, it isn't bubble up ! Please AB fix it
 					log.trace(`Parsing JSON`)
-					responseBody = JSON.parse(responseBody)
+					try {
+						responseBody = JSON.parse(responseBody)
+					} catch (e) {
+						responseBody = undefined
+					}
 				}
 				return new Response<T>(request,
 					req.status,
@@ -264,7 +269,7 @@ export namespace httpclient {
 			xhr.ontimeout = xhr.onerror
 			xhr.onload = () => {
 				if (log.isTraceEnabled()) {
-					log.trace(xhr.status + ': ' + traceMessage)
+					log.trace(xhr.status + ' ' + traceMessage)
 				}
 				if (xhr.status >= 200 && xhr.status < 400) {
 					// Success!
@@ -276,6 +281,9 @@ export namespace httpclient {
 			xhr.open(request.method, request.url)
 			xhr.responseType = request.responseType
 
+			if (request.responseType === 'json') {
+				xhr.setRequestHeader('Accept', 'application/json')
+			}
 			for (const headerName in request.headers) {
 				xhr.setRequestHeader(headerName, request.headers[headerName])
 			}
