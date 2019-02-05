@@ -264,7 +264,12 @@ export namespace httpclient {
 				resolve(buildResponseAndUpdateRequest(req))
 			}
 
-			xhr.onerror = () => rejectRequest(xhr)
+			xhr.onerror = () => {
+				if (log.isTraceEnabled()) {
+					log.trace(xhr.status + ' ' + traceMessage)
+				}
+				rejectRequest(xhr)
+			}
 			xhr.onabort = xhr.onerror
 			xhr.ontimeout = xhr.onerror
 			xhr.onload = () => {
