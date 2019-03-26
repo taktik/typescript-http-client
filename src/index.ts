@@ -3,6 +3,7 @@ import * as log4javascript from 'log4javascript'
 export namespace httpclient {
 	const log = log4javascript.getLogger('http.client')
 
+	// In order to be an HttpClient, the class should make calls both with and without a response and add filters to its list
 	export interface HttpClient {
 		callForResponse<T>(request: Request): Promise<Response<T>>
 
@@ -11,6 +12,7 @@ export namespace httpclient {
 		addFilter(filter: Filter, name: string, config?: FilterConfig): FilterRegistration
 	}
 
+	// Mains class to make calls to the API
 	class HttpClientImpl implements HttpClient {
 		private readonly _filters: InstalledFilter[]
 
@@ -18,9 +20,11 @@ export namespace httpclient {
 			this._filters = []
 		}
 
+		// Takes parameteres and created an InstalledFilter with them
 		addFilter(filter: Filter, name: string, config?: FilterConfig): FilterRegistration {
 			const installedFilter = new InstalledFilter(filter, name, config)
 			const filters = this._filters
+			// Returns an object with a method to remove the added filter
 			filters.push(installedFilter)
 			return {
 				remove(): void {
@@ -29,22 +33,26 @@ export namespace httpclient {
 			}
 		}
 
+		// Takes a Request and returns the body of the method callForResponse with the same parameter
 		async call<T>(call: Request): Promise<T> {
 			return (await this.callForResponse<T>(call)).body
 		}
 
+		// Takes a Request, creates a FilterChainChamp with the current filters and then calls the method doFilter with the received Request
 		async callForResponse<T>(call: Request): Promise<Response<T>> {
 			return new FilterChainImpl(this._filters).doFilter(call)
 		}
 	}
 
+	// Interfaces can hold proprities, this interface only contains a map of string-string
 	export interface Headers {
 		[name: string]: string
 	}
-
+	// Contains every parameter needed for a request as proprities 
 	export class Request {
 		url: string
 		contentType: string = 'application/json; charset=UTF-8'
+		// A way to decalre an enumeration (can be anything because of the string but the IDE will suggest the 4 first verbs)
 		method: 'GET' | 'POST' | 'PUT' | 'DELETE' | string = 'GET'
 		responseType: XMLHttpRequestResponseType = 'json'
 		withCredentials: boolean = false
@@ -54,6 +62,7 @@ export namespace httpclient {
 		readyState: number = 0
 		properties: {[key: string]: any} = {}
 
+		//constructor that can take a lot of parameters but only the URL is mandatory
 		constructor(url: string, {
 			contentType, method, responseType,
 			withCredentials, body, headers, timeout
@@ -85,6 +94,7 @@ export namespace httpclient {
 			}
 		}
 
+		// sets the proprities (like a constructor for changes)
 		set({
 				contentType, method, responseType,
 				withCredentials, body, headers, timeout
@@ -166,6 +176,7 @@ export namespace httpclient {
 
 	}
 
+	//The class that our calls return
 	export class Response<T> {
 		readonly properties: {[key: string]: any} = {}
 		constructor(readonly request: Request,
@@ -186,10 +197,13 @@ export namespace httpclient {
 		}
 	}
 
+	// Global function that takes a request, send it to the API and gives us its response
 	function execute<T>(request: Request): Promise<Response<T>> {
+		// Return a new Promise 
 		return new Promise<Response<T>>((resolve, reject) => {
 			let traceMessage: String | undefined
 			if (log.isTraceEnabled()) {
+				// Takes care of the logs
 				traceMessage = `${request.method} ${request.url}`
 				if (request.body) {
 					if (typeof request.body === 'string') {
@@ -203,10 +217,12 @@ export namespace httpclient {
 				}
 			}
 
+			// Creating an xmlhttprequest and giving it two proprities
 			const xhr = new XMLHttpRequest()
 			xhr.withCredentials = request.withCredentials
 			xhr.timeout = request.timeout
 
+			// This internal method takes the xml request and retrieve headers from it
 			const parseResponseHeaders = function(request: XMLHttpRequest): Headers {
 				// Create a map of header names to values
 				const headerMap: Headers = {}
@@ -217,6 +233,7 @@ export namespace httpclient {
 					// of individual headers
 					const arr = headers.trim().split(/[\r\n]+/)
 
+					// Splits every header in multiple key-value pairs
 					arr.forEach(function(line) {
 						line = line.trim()
 						if (line.length > 0) {
@@ -231,6 +248,7 @@ export namespace httpclient {
 				return headerMap
 			}
 
+			// This inernal method takes an XMLHttpRequest and return a response
 			const buildResponseAndUpdateRequest = function <T>(req: XMLHttpRequest): Response<T> {
 				request.readyState = req.readyState
 				let responseBody = req.response
@@ -256,6 +274,7 @@ export namespace httpclient {
 				)
 			}
 
+			// When the promise is returned, we call the buildResponseAndUpdateRequestMethod
 			const rejectRequest = function <T>(req: XMLHttpRequest) {
 				reject(buildResponseAndUpdateRequest(req))
 			}
@@ -264,6 +283,7 @@ export namespace httpclient {
 				resolve(buildResponseAndUpdateRequest(req))
 			}
 
+			// Defining the xmlHttpRequest properties (methods)
 			xhr.onerror = () => {
 				if (log.isTraceEnabled()) {
 					log.trace(xhr.status + ' ' + traceMessage)
@@ -283,6 +303,7 @@ export namespace httpclient {
 					rejectRequest(xhr)
 				}
 			}
+			// Initilizes the request
 			xhr.open(request.method, request.url)
 			xhr.responseType = request.responseType
 
@@ -300,6 +321,7 @@ export namespace httpclient {
 				body = JSON.stringify(body)
 			}
 
+			// Sending request to the server
 			xhr.send(body as (Document | BodyInit | null))
 		})
 	}
@@ -313,6 +335,8 @@ export namespace httpclient {
 		doFilter(call: Request): Promise<Response<any>>
 	}
 
+	// Third parameter is a function that will call the execute method with a given request
+	// Only the first parameter of this function is obligatory
 	class FilterChainImpl implements FilterChain {
 		constructor(readonly filters: InstalledFilter[], readonly fromIndex: number = 0, readonly callBack: (request: Request) => Promise<Response<any>> = execute) {
 		}
