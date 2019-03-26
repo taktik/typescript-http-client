@@ -48,7 +48,7 @@ export namespace httpclient {
 	export interface Headers {
 		[name: string]: string
 	}
-	// Contains every parameter needed for a request as proprities 
+	// Contains every parameter needed for a request as proprities
 	export class Request {
 		url: string
 		contentType: string = 'application/json; charset=UTF-8'
@@ -62,7 +62,7 @@ export namespace httpclient {
 		readyState: number = 0
 		properties: {[key: string]: any} = {}
 
-		//constructor that can take a lot of parameters but only the URL is mandatory
+		// constructor that can take a lot of parameters but only the URL is mandatory
 		constructor(url: string, {
 			contentType, method, responseType,
 			withCredentials, body, headers, timeout
@@ -176,7 +176,7 @@ export namespace httpclient {
 
 	}
 
-	//The class that our calls return
+	// The class that our calls return
 	export class Response<T> {
 		readonly properties: {[key: string]: any} = {}
 		constructor(readonly request: Request,
@@ -199,7 +199,7 @@ export namespace httpclient {
 
 	// Global function that takes a request, send it to the API and gives us its response
 	function execute<T>(request: Request): Promise<Response<T>> {
-		// Return a new Promise 
+		// Return a new Promise
 		return new Promise<Response<T>>((resolve, reject) => {
 			let traceMessage: String | undefined
 			if (log.isTraceEnabled()) {
