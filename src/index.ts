@@ -374,7 +374,7 @@ export namespace httpclient {
 	/*
 		Factory method
 	*/
-	export function newHttpClient() {
+	export function newHttpClient(): HttpClient {
 		return new HttpClientImpl()
 	}
 
