@@ -2,6 +2,7 @@ import * as log4javascript from 'log4javascript'
 
 export namespace httpclient {
 	const log = log4javascript.getLogger('http.client')
+	const filterLog = log4javascript.getLogger('http.client.filter')
 
 	export interface HttpClient {
 		callForResponse<T>(request: Request): Promise<Response<T>>
@@ -332,7 +333,7 @@ export namespace httpclient {
 			if (index < this.filters.length) {
 				const installedFilter = this.filters[index]
 				// We found a filter to apply
-				log.trace('Applying filter ' + installedFilter.name)
+				filterLog.trace('Applying filter ' + installedFilter.name)
 				return installedFilter.filter.doFilter(request, new FilterChainImpl(this.filters, index + 1, this.callBack))
 			} else {
 				// We are at the end of the filter chain,
