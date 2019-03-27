@@ -13,7 +13,7 @@ export namespace httpclient {
 
 		call<T> (request: Request): Promise<T>
 
-		addFilter (filter: Filter<any>, name: string, config?: FilterConfig): FilterRegistration
+		addFilter (filter: Filter<any, any>, name: string, config?: FilterConfig): FilterRegistration
 	}
 
 	class HttpClientImpl implements HttpClient {
@@ -23,7 +23,7 @@ export namespace httpclient {
 			this._filters = []
 		}
 
-		addFilter(filter: Filter<any>, name: string, config?: FilterConfig): FilterRegistration {
+		addFilter(filter: Filter<any, any>, name: string, config?: FilterConfig): FilterRegistration {
 			const installedFilter = new InstalledFilter(filter, name, config)
 			const filters = this._filters
 			filters.push(installedFilter)
@@ -322,11 +322,11 @@ export namespace httpclient {
 		remove(): void
 	}
 
-	export interface FilterChain {
-		doFilter(call: Request): Promise<Response<any>>
+	export interface FilterChain<T> {
+		doFilter(call: Request): Promise<Response<T>>
 	}
 
-	class FilterChainImpl implements FilterChain {
+	class FilterChainImpl implements FilterChain<any> {
 		constructor(readonly filters: InstalledFilter[], readonly fromIndex: number = 0, readonly callBack: (request: Request) => Promise<Response<any>> = execute) {
 		}
 
@@ -355,17 +355,17 @@ export namespace httpclient {
 		}
 	}
 
-	export class FilterCollection implements Filter<any> {
+	export class FilterCollection implements Filter<any, any> {
 		constructor(readonly filters: InstalledFilter[]) {
 		}
 
-		doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain): Promise<httpclient.Response<any>> {
+		doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
 			return new FilterChainImpl(this.filters, 0, request => filterChain.doFilter(request)).doFilter(call)
 		}
 	}
 
 	export class InstalledFilter {
-		constructor(readonly filter: Filter<any>, readonly name: string, readonly config?: FilterConfig) {
+		constructor(readonly filter: Filter<any, any>, readonly name: string, readonly config?: FilterConfig) {
 		}
 	}
 
@@ -379,8 +379,8 @@ export namespace httpclient {
 		enabled(call: Request): boolean
 	}
 
-	export interface Filter<T> {
-		doFilter(call: Request, filterChain: FilterChain): Promise<Response<T>>
+	export interface Filter<T, U> {
+		doFilter(call: Request, filterChain: FilterChain<T>): Promise<Response<U>>
 	}
 
 	/*
