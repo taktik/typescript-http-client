@@ -5,13 +5,15 @@ export namespace httpclient {
 	const filterLog = log4javascript.getLogger('http.client.filter')
 
 	export interface HttpClient {
-                executeForResponse<T>(request: Request): Promise<Response<T>>
-		callForResponse<T>(request: Request): Promise<Response<T>>
+		executeForResponse<T> (request: Request): Promise<Response<T>>
 
-                execute<T>(request: Request): Promise<T>
-		call<T>(request: Request): Promise<T>
+		callForResponse<T> (request: Request): Promise<Response<T>>
 
-		addFilter(filter: Filter, name: string, config?: FilterConfig): FilterRegistration
+		execute<T> (request: Request): Promise<T>
+
+		call<T> (request: Request): Promise<T>
+
+		addFilter (filter: Filter, name: string, config?: FilterConfig): FilterRegistration
 	}
 
 	class HttpClientImpl implements HttpClient {
@@ -32,21 +34,21 @@ export namespace httpclient {
 			}
 		}
 
-                async execute<T>(call: Request): Promise<T> {
+		async execute<T>(call: Request): Promise<T> {
 			return (await this.callForResponse<T>(call)).body
 		}
 
-                async executeForResponse<T>(call: Request): Promise<Response<T>> {
+		async executeForResponse<T> (call: Request): Promise<Response<T>> {
 			return new FilterChainImpl(this._filters).doFilter(call)
 		}
 
-                async call<T>(call: Request): Promise<T> {
-                        return this.execute<T>(call)
-                }
+		async call<T> (call: Request): Promise<T> {
+			return this.execute<T>(call)
+		}
 
-                async callForResponse<T>(call: Request): Promise<Response<T>> {
-                        return this.executeForResponse<T>(call)
-                }
+		async callForResponse<T> (call: Request): Promise<Response<T>> {
+			return this.executeForResponse<T>(call)
+		}
 	}
 
 	export interface Headers {
