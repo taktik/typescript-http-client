@@ -13,7 +13,7 @@ export namespace httpclient {
 
 		call<T> (request: Request): Promise<T>
 
-		addFilter (filter: Filter, name: string, config?: FilterConfig): FilterRegistration
+		addFilter (filter: Filter<any>, name: string, config?: FilterConfig): FilterRegistration
 	}
 
 	class HttpClientImpl implements HttpClient {
@@ -23,7 +23,7 @@ export namespace httpclient {
 			this._filters = []
 		}
 
-		addFilter(filter: Filter, name: string, config?: FilterConfig): FilterRegistration {
+		addFilter(filter: Filter<any>, name: string, config?: FilterConfig): FilterRegistration {
 			const installedFilter = new InstalledFilter(filter, name, config)
 			const filters = this._filters
 			filters.push(installedFilter)
@@ -355,7 +355,7 @@ export namespace httpclient {
 		}
 	}
 
-	export class FilterCollection implements Filter {
+	export class FilterCollection implements Filter<any> {
 		constructor(readonly filters: InstalledFilter[]) {
 		}
 
@@ -365,7 +365,7 @@ export namespace httpclient {
 	}
 
 	export class InstalledFilter {
-		constructor(readonly filter: Filter, readonly name: string, readonly config?: FilterConfig) {
+		constructor(readonly filter: Filter<any>, readonly name: string, readonly config?: FilterConfig) {
 		}
 	}
 
@@ -379,8 +379,8 @@ export namespace httpclient {
 		enabled(call: Request): boolean
 	}
 
-	export interface Filter {
-		doFilter(call: Request, filterChain: FilterChain): Promise<Response<any>>
+	export interface Filter<T> {
+		doFilter(call: Request, filterChain: FilterChain): Promise<Response<T>>
 	}
 
 	/*
