@@ -69,7 +69,7 @@ Filters can be used to:
 * Alter any request property (headers, url, body, etc...)
 * Alter any response property (headers, body, etc...)
 * Short-circuit the chain by returning a custom response without proceeding with the HTTP call, allowing for example for client-side caching.
-* Intercept some or all calls for debugging/loggingK purposes
+* Intercept some or all calls for debugging/logging purposes
 
 Filters must implement the `Filter` interface and implement the `doFilter` method:
 ```typescript
