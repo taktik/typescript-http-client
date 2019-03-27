@@ -64,8 +64,8 @@ class Todo {
 ### Filters
 
 Filters can be used to:
-Enrich/alter any request property (headers, url, body, etc...)
-Enrich/alter any response property (headers, body, etc...)
+* Enrich/alter any request property (headers, url, body, etc...)
+* Enrich/alter any response property (headers, body, etc...)
 
 ###### Transform the response body:
 
