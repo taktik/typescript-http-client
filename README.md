@@ -64,7 +64,6 @@ class Todo {
 ### Filters 
 
 Multiple filters can be added to the httpClient, in a certain order, forming a chain of filters.
-The pattern followed here is the same 
 
 Filters can be used to:
 * Alter any request property (headers, url, body, etc...)
