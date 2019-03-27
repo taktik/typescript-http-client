@@ -85,12 +85,12 @@ class Todo {
 
 // Transform Todos : Alter title
 class TodoTransformer implements Filter<Todo, Todo> {
-	async doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain<Todo>): Promise<httpclient.Response<Todo>> {
+  async doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain<Todo>): Promise<httpclient.Response<Todo>> {
     const response = await filterChain.doFilter(call)
-    const todo = response.body
-    todo.title = 'Modified title'
-    return response
-	}
+     const todo = response.body
+     todo.title = 'Modified title'
+     return response
+  }
 }
 
 (async () => {
