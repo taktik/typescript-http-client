@@ -61,11 +61,26 @@ class Todo {
 })()
 ```
 
-### Filters
+### Filters 
+
+Multiple filters can be added to the httpClient, in a certain order, forming a chain of filters.
+The pattern followed here is the same 
 
 Filters can be used to:
-* Enrich/alter any request property (headers, url, body, etc...)
-* Enrich/alter any response property (headers, body, etc...)
+* Alter any request property (headers, url, body, etc...)
+* Alter any response property (headers, body, etc...)
+* Short-circuit the chain by returning a custom response without proceeding with the HTTP call, allowing for example for client-side caching.
+* Intercept some or all calls for debugging/loggingK purposes
+
+Filters must implement the `Filter` interface and implement the `doFilter` method:
+```typescript
+interface Filter<T, U> {
+  doFilter(request: Request, filterChain: FilterChain<T>): Promise<Response<U>>
+}
+```
+The `request` parameter contains the request (possibly already modified by previous filters) and can be modified by the filter (or ignored)
+
+The `filterChain` parameter represents the chain of filters following the current filter
 
 ###### Filter full example : Transform the response body:
 
