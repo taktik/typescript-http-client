@@ -67,7 +67,9 @@ Filters can be used to:
 * Enrich/alter any request property (headers, url, body, etc...)
 * Enrich/alter any response property (headers, body, etc...)
 
-###### Transform the response body:
+###### Filter full example : Transform the response body:
+
+This example transforms the fetched Todos and modify their title
 
 ```typescript
 import expect from 'ceylon';
