@@ -16,8 +16,8 @@ import Request = httpclient.Request
   // Build the request
   const request = new Request('https://jsonplaceholder.typicode.com/todos/1', { responseType: 'text' })
   // Execute the request and get the response body as a string
-  const response = await client.execute<string>(request)
-  expect(response)
+  const responseBody = await client.execute<string>(request)
+  expect(responseBody)
     .toExist()
     .toBeA('string')
     .toBe(`{
