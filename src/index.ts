@@ -3,7 +3,12 @@ import * as log4javascript from 'log4javascript'
 export namespace httpclient {
 	const log = log4javascript.getLogger('http.client')
 
-	// In order to be an HttpClient, the class should make calls both with and without a response and add filters to its list
+	/**
+	 * In order to be an HttpClient, the class should:
+	 * Make a call to the server and returning a response
+	 * Make a simpler call to the server that only returns a part of the response
+	 * Add a filter to its filter list
+	 */
 	export interface HttpClient {
 		callForResponse<T>(request: Request): Promise<Response<T>>
 
@@ -13,6 +18,7 @@ export namespace httpclient {
 	}
 
 	// Mains class to make calls to the API
+	// The call will call doFilter and doFilter will call execute
 	class HttpClientImpl implements HttpClient {
 		private readonly _filters: InstalledFilter[]
 
@@ -20,7 +26,9 @@ export namespace httpclient {
 			this._filters = []
 		}
 
-		// Takes parameteres and created an InstalledFilter with them
+		// Takes parameters and creates an InstalledFilter with them
+		// Add the InstalledFilter to the filter array
+		// The InstalledFilter is made of two parts: The Filter and the FilterConfig
 		addFilter(filter: Filter, name: string, config?: FilterConfig): FilterRegistration {
 			const installedFilter = new InstalledFilter(filter, name, config)
 			const filters = this._filters
@@ -33,7 +41,7 @@ export namespace httpclient {
 			}
 		}
 
-		// Takes a Request and returns the body of the method callForResponse with the same parameter
+		// Takes a Request and returns the body of the promise returned by the method callForResponse
 		async call<T>(call: Request): Promise<T> {
 			return (await this.callForResponse<T>(call)).body
 		}
@@ -44,11 +52,11 @@ export namespace httpclient {
 		}
 	}
 
-	// Interfaces can hold proprities, this interface only contains a map of string-string
+	// Interfaces can hold properties, this interface only contains a map of string-string
 	export interface Headers {
 		[name: string]: string
 	}
-	// Contains every parameter needed for a request as proprities
+	// Contains every parameter needed for a request as properties
 	export class Request {
 		url: string
 		contentType: string = 'application/json; charset=UTF-8'
@@ -94,7 +102,7 @@ export namespace httpclient {
 			}
 		}
 
-		// sets the proprities (like a constructor for changes)
+		// sets the properties (like a constructor for changes)
 		set({
 				contentType, method, responseType,
 				withCredentials, body, headers, timeout
@@ -217,7 +225,7 @@ export namespace httpclient {
 				}
 			}
 
-			// Creating an xmlhttprequest and giving it two proprities
+			// Creating an xmlhttprequest and giving it two properties
 			const xhr = new XMLHttpRequest()
 			xhr.withCredentials = request.withCredentials
 			xhr.timeout = request.timeout
@@ -303,7 +311,7 @@ export namespace httpclient {
 					rejectRequest(xhr)
 				}
 			}
-			// Initilizes the request
+			// Initializes the request
 			xhr.open(request.method, request.url)
 			xhr.responseType = request.responseType
 
@@ -326,30 +334,47 @@ export namespace httpclient {
 		})
 	}
 
+	/**
+	 * Interface usefull to remove a Filter after it has been added to the httpCLient array
+	 */
 	export interface FilterRegistration {
 		// Remove the filter
 		remove(): void
 	}
 
+	/**
+	 * Interface that oblige the object to have a method that takes a request and returns a response,
+	 * thus sending the request to the server
+	 */
 	export interface FilterChain {
 		doFilter(call: Request): Promise<Response<any>>
 	}
 
-	// Third parameter is a function that will call the execute method with a given request
-	// Only the first parameter of this function is obligatory
+	/**
+	 * Third parameter is a function that will call the execute method with a given request
+	 * Only the first parameter of the constructor is obligatory
+	 * Has all the filters that could be applied to a request
+	 * Goes throught them and applies them to the request if the config is matching
+	 */
 	class FilterChainImpl implements FilterChain {
 		constructor(readonly filters: InstalledFilter[], readonly fromIndex: number = 0, readonly callBack: (request: Request) => Promise<Response<any>> = execute) {
 		}
 
 		async doFilter(request: Request): Promise<Response<any>> {
+			// References the parameter of the class that is zero by default
 			let index = this.fromIndex
 			// Find next filter to apply
+			// Looping throught all its filters
 			while (index < this.filters.length) {
+				// We take each filter and we verify if the filters config is not defined or if
+				// its enabled method returns true when passed the request that doFilter received as parameter
 				const filter = this.filters[index]
+				// If an InstalledFilter has no config, it should be applied to all requests
 				if (!filter.config || filter.config.enabled(request)) {
 					// We have found a filter to apply
 					break
 				} else {
+					// Go to next filter
 					index++
 				}
 			}
@@ -357,6 +382,8 @@ export namespace httpclient {
 				const installedFilter = this.filters[index]
 				// We found a filter to apply
 				log.trace('Applying filter ' + installedFilter.name)
+				// We return the filter of the installedFilter we found and applied to it its own .doFilter method which is not the same method
+				// passing to it the same request and a new FilterChainImpl with the list of filters, a counter incremented by 1, and the callback method
 				return installedFilter.filter.doFilter(request, new FilterChainImpl(this.filters, index + 1, this.callBack))
 			} else {
 				// We are at the end of the filter chain,
@@ -369,12 +396,21 @@ export namespace httpclient {
 	export class FilterCollection implements Filter {
 		constructor(readonly filters: InstalledFilter[]) {
 		}
-
-		doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain): Promise<httpclient.Response<any>> {
+		/**
+		 * @param call Is the request we want to modify
+		 * @param filterChain is an Interface that is a Filter, but its goal is to simulate
+		 * nested filters. So it contains an array of filter and its doFilter loops trhought all its filters
+		 * before continuing with the main chain of filters
+		 */
+		doFilter (call: Request, filterChain: FilterChain): Promise<Response<any>> {
 			return new FilterChainImpl(this.filters, 0, request => filterChain.doFilter(request)).doFilter(call)
 		}
 	}
 
+	/**
+	 * Is composed of a FilterConfig that checks the request to know if the Filter should be applied
+	 * and of a Filter that does something to the request/response
+	 */
 	export class InstalledFilter {
 		constructor(readonly filter: Filter, readonly name: string, readonly config?: FilterConfig) {
 		}

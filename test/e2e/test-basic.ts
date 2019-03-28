@@ -1,8 +1,9 @@
 import { assert } from 'chai'
+import { spy } from 'sinon'
 import { httpclient } from '../../src/index'
 
 describe('httpclient', () => {
-  // Initializing all variables that we will need
+  // Declaring all variables that we will need
 	let httpClient: httpclient.HttpClient
 	let aResponse: httpclient.Response<Object>
 	let anotherResponse: httpclient.Response<Object>
@@ -26,6 +27,15 @@ describe('httpclient', () => {
 		}
 		anotherFilter = {
 			doFilter: (call: httpclient.Request, filterChain: httpclient.FilterChain) => Promise.resolve(anotherResponse)
+		}
+	// Creating a new implementation of FilterConfig
+		class JsonPlaceHolder implements httpclient.FilterConfig {
+			enabled(call: httpclient.Request): boolean {
+				if (call.url.includes('jsonplaceholder.typicode.com')) {
+					return true
+				}
+				return false
+			}
 		}
 	})
 	describe('newHttpClient', function() {
@@ -71,6 +81,12 @@ describe('httpclient', () => {
 			ctrlZZ.remove()
 			assert.equal((httpClient as any)._filters[0].name, 'the first filter')
 		})
+		it('should take into account the added filter', async function() {
+			spy(aFilter, 'doFilter')
+			httpClient.addFilter(aFilter, 'the first filter')
+			await httpClient.call<Object>(aRequest)
+			assert.isTrue((aFilter.doFilter as any).called)
+		})
 	})
 	describe('call', function() {
 		it('should return the body of the called request', async function() {
@@ -85,7 +101,7 @@ describe('httpclient', () => {
 		})
 	})
 	describe('set', function() {
-		it('should change all the proprities of a Request', function() {
+		it('should change all the properties of a Request', function() {
 			let partialRequest: {
 				contentType?: string, method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | string,
 				responseType?: XMLHttpRequestResponseType,
@@ -102,7 +118,7 @@ describe('httpclient', () => {
 			partialRequest.headers = { 'aKey': 'aValue' }
 			partialRequest.timeout = 20000
 			aRequest.set(partialRequest)
-		// Test successful only if each proprety has changed
+		// Test successful only if each property has changed
 			assert.notEqual(aRequest.contentType, 'application/json; charset=UTF-8')
 			assert.notEqual(aRequest.method, 'GET')
 			assert.notEqual(aRequest.responseType, 'json')
