@@ -46,7 +46,8 @@ export namespace httpclient {
 			return (await this.callForResponse<T>(call)).body
 		}
 
-		// Takes a Request, creates a FilterChainChamp with the current filters and then calls the method doFilter with the received Request
+		// Takes a Request, creates the main chain of filters with the current filters of httpclient
+		// and then calls the method doFilter with the received Request
 		async callForResponse<T>(call: Request): Promise<Response<T>> {
 			return new FilterChainImpl(this._filters).doFilter(call)
 		}
@@ -205,9 +206,9 @@ export namespace httpclient {
 		}
 	}
 
-	// Global function that takes a request, send it to the API and gives us its response
+	// Global function that takes a request (after being filtered), send it to the API and gives us its response
 	function execute<T>(request: Request): Promise<Response<T>> {
-		// Return a new Promise
+		// Returns a new Promise
 		return new Promise<Response<T>>((resolve, reject) => {
 			let traceMessage: String | undefined
 			if (log.isTraceEnabled()) {
@@ -256,11 +257,14 @@ export namespace httpclient {
 				return headerMap
 			}
 
-			// This inernal method takes an XMLHttpRequest and return a response
+			// This inernal method takes an XMLHttpRequest and transfro
 			const buildResponseAndUpdateRequest = function <T>(req: XMLHttpRequest): Response<T> {
+				// Updating the readyState of the request we received because we will return it contained in the Response
 				request.readyState = req.readyState
+				// Getting the real response of the XMLHttpRequest
 				let responseBody = req.response
 				// Some implementations of XMLHttpRequest ignore the "json" responseType
+				// Checking if the form of the request we receive is correct
 				if (request.responseType === 'json'
 					&& typeof responseBody === 'string'
 					&& (req.responseType === '' || req.responseType === 'text')
@@ -274,6 +278,7 @@ export namespace httpclient {
 						responseBody = undefined
 					}
 				}
+				// Interpreting the real response and returning it as our own Response class
 				return new Response<T>(request,
 					req.status,
 					req.statusText,
