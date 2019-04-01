@@ -17,8 +17,8 @@ export namespace httpclient {
 		addFilter(filter: Filter, name: string, config?: FilterConfig): FilterRegistration
 	}
 
-	// Mains class to make calls to the API
-	// The call will call doFilter and doFilter will call execute
+	// Main class to make calls to the API
+	// method call will call method doFilter and it will call method execute
 	class HttpClientImpl implements HttpClient {
 		private readonly _filters: InstalledFilter[]
 
@@ -53,7 +53,8 @@ export namespace httpclient {
 		}
 	}
 
-	// Interfaces can hold properties, this interface only contains a map of string-string
+	// Interfaces can hold properties
+	// This interface only contains a map of string-string
 	export interface Headers {
 		[name: string]: string
 	}
@@ -61,7 +62,7 @@ export namespace httpclient {
 	export class Request {
 		url: string
 		contentType: string = 'application/json; charset=UTF-8'
-		// A way to decalre an enumeration (can be anything because of the string but the IDE will suggest the 4 first verbs)
+		// A way to declare an enumeration (can be anything because of the string but the IDE will suggest the 4 first verbs)
 		method: 'GET' | 'POST' | 'PUT' | 'DELETE' | string = 'GET'
 		responseType: XMLHttpRequestResponseType = 'json'
 		withCredentials: boolean = false
@@ -226,7 +227,8 @@ export namespace httpclient {
 				}
 			}
 
-			// Creating an xmlhttprequest and giving it two properties
+			// Creating a new XMLHttpRequest and giving it two properties from the request this method received
+			// This will be the request we will send to the server
 			const xhr = new XMLHttpRequest()
 			xhr.withCredentials = request.withCredentials
 			xhr.timeout = request.timeout
@@ -257,14 +259,17 @@ export namespace httpclient {
 				return headerMap
 			}
 
-			// This inernal method takes an XMLHttpRequest and transfro
+			// This inernal method takes an XMLHttpRequest and will return a Response
+			// The request of the returned Response will stay as it was, only its readystate will be updated
+			// The rest of the returned Repsponse will be update accordinly to the XMLHttpRequest this method receives
 			const buildResponseAndUpdateRequest = function <T>(req: XMLHttpRequest): Response<T> {
-				// Updating the readyState of the request we received because we will return it contained in the Response
+				// Puting the newly received ready state in the request the global method received
+				// because we will return it contained in the Response
 				request.readyState = req.readyState
-				// Getting the real response of the XMLHttpRequest
+				// Getting the response of the XMLHttpRequest we receive
 				let responseBody = req.response
 				// Some implementations of XMLHttpRequest ignore the "json" responseType
-				// Checking if the form of the request we receive is correct
+				// Checking if the form of the request the parent method received is correct
 				if (request.responseType === 'json'
 					&& typeof responseBody === 'string'
 					&& (req.responseType === '' || req.responseType === 'text')
@@ -278,7 +283,9 @@ export namespace httpclient {
 						responseBody = undefined
 					}
 				}
-				// Interpreting the real response and returning it as our own Response class
+				// We return a response with the request of the parent method (only the readystate has changed)
+				// We add to it a couple of properties from the request this method received
+				// And wrap it up into our Response class
 				return new Response<T>(request,
 					req.status,
 					req.statusText,
@@ -288,6 +295,7 @@ export namespace httpclient {
 			}
 
 			// When the promise is returned, we call the buildResponseAndUpdateRequestMethod
+			// And this is what will give us our final Response
 			const rejectRequest = function <T>(req: XMLHttpRequest) {
 				reject(buildResponseAndUpdateRequest(req))
 			}
@@ -296,7 +304,7 @@ export namespace httpclient {
 				resolve(buildResponseAndUpdateRequest(req))
 			}
 
-			// Defining the xmlHttpRequest properties (methods)
+			// Defining the main xmlHttpRequest properties (methods)
 			xhr.onerror = () => {
 				if (log.isTraceEnabled()) {
 					log.trace(xhr.status + ' ' + traceMessage)
@@ -318,8 +326,10 @@ export namespace httpclient {
 			}
 			// Initializes the request
 			xhr.open(request.method, request.url)
+			// Copying the response type from the Request we received
 			xhr.responseType = request.responseType
 
+			// Adapting the main XMLHttpRequest in function of the passed Request
 			if (request.responseType === 'json') {
 				xhr.setRequestHeader('Accept', 'application/json')
 			}
@@ -340,7 +350,7 @@ export namespace httpclient {
 	}
 
 	/**
-	 * Interface usefull to remove a Filter after it has been added to the httpCLient array
+	 * Interface useful to remove a Filter after it has been added to the httpClient array
 	 */
 	export interface FilterRegistration {
 		// Remove the filter
@@ -348,8 +358,8 @@ export namespace httpclient {
 	}
 
 	/**
-	 * Interface that oblige the object to have a method that takes a request and returns a response,
-	 * thus sending the request to the server
+	 * A FilterChain should have a method to apply all its filters
+	 * on a Request and send it to the server
 	 */
 	export interface FilterChain {
 		doFilter(call: Request): Promise<Response<any>>
@@ -404,7 +414,7 @@ export namespace httpclient {
 		/**
 		 * @param call Is the request we want to modify
 		 * @param filterChain is an Interface that is a Filter, but its goal is to simulate
-		 * nested filters. So it contains an array of filter and its doFilter loops trhought all its filters
+		 * nested filters. So it contains an array of filter and its doFilter loops trhough all its filters
 		 * before continuing with the main chain of filters
 		 */
 		doFilter (call: Request, filterChain: FilterChain): Promise<Response<any>> {
