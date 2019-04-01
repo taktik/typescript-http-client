@@ -2,6 +2,7 @@ import * as log4javascript from 'log4javascript'
 
 export namespace httpclient {
 	const log = log4javascript.getLogger('http.client')
+	const filterLog = log4javascript.getLogger('http.client.filter')
 
 	/**
 	 * In order to be an HttpClient, the class should:
@@ -10,11 +11,15 @@ export namespace httpclient {
 	 * Add a filter to its filter list
 	 */
 	export interface HttpClient {
-		callForResponse<T>(request: Request): Promise<Response<T>>
+		executeForResponse<T> (request: Request): Promise<Response<T>>
 
-		call<T>(request: Request): Promise<T>
+		callForResponse<T> (request: Request): Promise<Response<T>>
 
-		addFilter(filter: Filter, name: string, config?: FilterConfig): FilterRegistration
+		execute<T> (request: Request): Promise<T>
+
+		call<T> (request: Request): Promise<T>
+
+		addFilter (filter: Filter<any, any>, name: string, config?: FilterConfig): FilterRegistration
 	}
 
 	// Main class to make calls to the API
@@ -29,7 +34,7 @@ export namespace httpclient {
 		// Takes parameters and creates an InstalledFilter with them
 		// Add the InstalledFilter to the filter array
 		// The InstalledFilter is made of two parts: The Filter and the FilterConfig
-		addFilter(filter: Filter, name: string, config?: FilterConfig): FilterRegistration {
+		addFilter(filter: Filter<any, any>, name: string, config?: FilterConfig): FilterRegistration {
 			const installedFilter = new InstalledFilter(filter, name, config)
 			const filters = this._filters
 			// Returns an object with a method to remove the added filter
@@ -41,15 +46,25 @@ export namespace httpclient {
 			}
 		}
 
-		// Takes a Request and returns the body of the promise returned by the method callForResponse
-		async call<T>(call: Request): Promise<T> {
+    // Takes a Request and returns the body of the promise returned by the method callForResponse
+		async execute<T>(call: Request): Promise<T> {
 			return (await this.callForResponse<T>(call)).body
 		}
 
 		// Takes a Request, creates the main chain of filters with the current filters of httpclient
 		// and then calls the method doFilter with the received Request
-		async callForResponse<T>(call: Request): Promise<Response<T>> {
+		async executeForResponse<T> (call: Request): Promise<Response<T>> {
 			return new FilterChainImpl(this._filters).doFilter(call)
+		}
+
+    // Same as execute
+		async call<T> (call: Request): Promise<T> {
+			return this.execute<T>(call)
+		}
+
+    // Same as executeForResponse
+		async callForResponse<T> (call: Request): Promise<Response<T>> {
+			return this.executeForResponse<T>(call)
 		}
 	}
 
@@ -361,17 +376,17 @@ export namespace httpclient {
 	 * A FilterChain should have a method to apply all its filters
 	 * on a Request and send it to the server
 	 */
-	export interface FilterChain {
-		doFilter(call: Request): Promise<Response<any>>
+	export interface FilterChain<T> {
+		doFilter(call: Request): Promise<Response<T>>
 	}
 
-	/**
+  /**
 	 * Third parameter is a function that will call the execute method with a given request
 	 * Only the first parameter of the constructor is obligatory
 	 * Has all the filters that could be applied to a request
 	 * Goes throught them and applies them to the request if the config is matching
 	 */
-	class FilterChainImpl implements FilterChain {
+	class FilterChainImpl implements FilterChain<any> {
 		constructor(readonly filters: InstalledFilter[], readonly fromIndex: number = 0, readonly callBack: (request: Request) => Promise<Response<any>> = execute) {
 		}
 
@@ -396,7 +411,7 @@ export namespace httpclient {
 			if (index < this.filters.length) {
 				const installedFilter = this.filters[index]
 				// We found a filter to apply
-				log.trace('Applying filter ' + installedFilter.name)
+				filterLog.trace('Applying filter ' + installedFilter.name)
 				// We return the filter of the installedFilter we found and applied to it its own .doFilter method which is not the same method
 				// passing to it the same request and a new FilterChainImpl with the list of filters, a counter incremented by 1, and the callback method
 				return installedFilter.filter.doFilter(request, new FilterChainImpl(this.filters, index + 1, this.callBack))
@@ -408,16 +423,17 @@ export namespace httpclient {
 		}
 	}
 
-	export class FilterCollection implements Filter {
+	export class FilterCollection implements Filter<any, any> {
 		constructor(readonly filters: InstalledFilter[]) {
 		}
+
 		/**
 		 * @param call Is the request we want to modify
 		 * @param filterChain is an Interface that is a Filter, but its goal is to simulate
 		 * nested filters. So it contains an array of filter and its doFilter loops trhough all its filters
 		 * before continuing with the main chain of filters
 		 */
-		doFilter (call: Request, filterChain: FilterChain): Promise<Response<any>> {
+		doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
 			return new FilterChainImpl(this.filters, 0, request => filterChain.doFilter(request)).doFilter(call)
 		}
 	}
@@ -427,7 +443,7 @@ export namespace httpclient {
 	 * and of a Filter that does something to the request/response
 	 */
 	export class InstalledFilter {
-		constructor(readonly filter: Filter, readonly name: string, readonly config?: FilterConfig) {
+		constructor(readonly filter: Filter<any, any>, readonly name: string, readonly config?: FilterConfig) {
 		}
 	}
 
@@ -441,14 +457,14 @@ export namespace httpclient {
 		enabled(call: Request): boolean
 	}
 
-	export interface Filter {
-		doFilter(call: Request, filterChain: FilterChain): Promise<Response<any>>
+	export interface Filter<T, U> {
+		doFilter(call: Request, filterChain: FilterChain<T>): Promise<Response<U>>
 	}
 
 	/*
 		Factory method
 	*/
-	export function newHttpClient() {
+	export function newHttpClient(): HttpClient {
 		return new HttpClientImpl()
 	}
 
