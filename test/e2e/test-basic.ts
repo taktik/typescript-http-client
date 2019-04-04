@@ -9,8 +9,8 @@ describe('httpclient', () => {
 	let anotherResponse: httpclient.Response<Object>
 	let aRequest: httpclient.Request
 	let anotherRequest: httpclient.Request
-	let aFilter: httpclient.Filter
-	let anotherFilter: httpclient.Filter
+	let aFilter: httpclient.Filter<any,any>
+	let anotherFilter: httpclient.Filter<any,any>
   // Executed before each test
 	beforeEach(function() {
 	// httpClient instantiation
@@ -23,10 +23,10 @@ describe('httpclient', () => {
 		anotherResponse = new httpclient.Response(anotherRequest, 404, 'NotFound', { 'content-type': 'Application/Json' }, '')
 	// Creating filters
 		aFilter = {
-			doFilter: (call: httpclient.Request, filterChain: httpclient.FilterChain) => Promise.resolve(aResponse)
+			doFilter: (call: httpclient.Request, filterChain: httpclient.FilterChain<any>) => Promise.resolve(aResponse)
 		}
 		anotherFilter = {
-			doFilter: (call: httpclient.Request, filterChain: httpclient.FilterChain) => Promise.resolve(anotherResponse)
+			doFilter: (call: httpclient.Request, filterChain: httpclient.FilterChain<any>) => Promise.resolve(anotherResponse)
 		}
 	// Creating a new implementation of FilterConfig
 		class JsonPlaceHolder implements httpclient.FilterConfig {
@@ -128,11 +128,4 @@ describe('httpclient', () => {
 			assert.notEqual(aRequest.timeout, 30000)
 		})
 	})
-  // describe('what to describe', function() {
-  //   it('should do something', function() {
-
-  //     assert.equal(1,1)
-  //   })
-  // })
-  //
 })
