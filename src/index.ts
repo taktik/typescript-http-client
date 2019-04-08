@@ -222,8 +222,6 @@ export namespace httpclient {
 		}
 	}
 
-	
-
 	/**
 	 * Interface useful to remove a Filter after it has been added to the httpClient array
 	 */
