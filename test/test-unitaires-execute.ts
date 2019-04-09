@@ -41,7 +41,7 @@ describe('execute', function() {
 			const a = await result
 			assert.notEqual(typeof a.headers, 'string')
 		})
-		it('should return the right properties in the response when calling a get', async function() {
+		it('should return the right properties in the response when calling a server', async function() {
 			server.respondWith(
 			'GET',
 			'/damso/feudebois',
@@ -60,11 +60,29 @@ describe('execute', function() {
 			assert.deepEqual((a.headers as any), { 'Content-Type': 'application/json' })
 			assert.equal((a.status as any), 200)
 		})
+		it('should return an undefined response body if it is not json parsable', async function() {
+			server.respondWith(
+			'GET',
+			'/akk/barillo',
+				[
+					200,
+					{ 'Content-Type': 'application/json' },
+					'Pas un format JSON'
+				]
+			)
+			server.autoRespond = true
+			let fakeRequest = new httpclient.Request('/akk/barillo')
+			const result = execute(fakeRequest)
+			server.respond()
+			const a = await result
+			assert.equal(a.body, undefined)
+		})
 	})
 	describe('execute with a real API external', function() {
 		let postResponse: Object
 		let idOfCreatedObject: number
 		before(async function() {
+			this.timeout(5000)
 			aRequest = new httpclient.Request('http://dummy.restapiexample.com/api/v1/create')
 			aRequest.method = 'POST'
 			aRequest.body = {
@@ -117,6 +135,34 @@ describe('execute', function() {
 			let allEmployees = getResponse.body
 			let theEmployee = (allEmployees as Array<Object>).find((k) => (k as any).id === idOfCreatedObject)
 			assert.notExists(theEmployee)
+		})
+		it('should throw an error if http request sent to bad url', async function() {
+			this.timeout(5000)
+			try {
+				aRequest = new httpclient.Request('i@#ccidently_mizspeld976theurl/')
+				await execute(aRequest)
+				assert.isTrue(false, 'previous line should throw an error')
+			} catch (error) {
+				const response: httpclient.Response<Object> = error
+				assert.equal(response.status, 404)
+			}
+		})
+		it('should also throw an error', async function() {
+			this.timeout(5000)
+			try {
+				aRequest = new httpclient.Request('http://dummy.restapiexample.com/api/v1/employees')
+				aRequest.method = 'PUT'
+				aRequest.body = {
+					'name': 'pnl',
+					'salary': '1',
+					'age': '22'
+				}
+				await execute(aRequest)
+				assert.isTrue(false, 'previous line should throw an error')
+			} catch (error) {
+				const response: httpclient.Response<Object> = error
+				assert.equal(response.status,405)
+			}
 		})
 	})
 })
