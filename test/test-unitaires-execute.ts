@@ -87,7 +87,7 @@ describe('execute', function() {
 			aRequest.method = 'POST'
 			aRequest.body = {
 				'name': 'auDD',
-				'salary': '333',
+				'salary': '333000',
 				'age': '22'
 			}
 			postResponse = await execute(aRequest)
@@ -103,7 +103,7 @@ describe('execute', function() {
 			let allEmployees = getResponse.body
 			let theEmployee = (allEmployees as Array<Object>).find((k) => (k as any).employee_name === 'auDD')
 			idOfCreatedObject = (theEmployee as any).id
-			assert.equal((theEmployee as any).employee_salary,333)
+			assert.equal((theEmployee as any).employee_salary,333000)
 			assert.equal((theEmployee as any).employee_age,22)
 		})
 		it('should be able to modify the entry we added', async function() {
@@ -112,7 +112,7 @@ describe('execute', function() {
 			aRequest.method = 'PUT'
 			aRequest.body = {
 				'name': 'pnl',
-				'salary': '1',
+				'salary': '1000000',
 				'age': '22'
 			}
 			let putResponse = await execute(aRequest)
@@ -121,7 +121,7 @@ describe('execute', function() {
 			let allEmployees = getResponse.body
 			let theEmployee = (allEmployees as Array<Object>).find((k) => (k as any).employee_name === 'pnl')
 			assert.equal(idOfCreatedObject,(theEmployee as any).id)
-			assert.equal((theEmployee as any).employee_salary,1)
+			assert.equal((theEmployee as any).employee_salary,1000000)
 			assert.equal((theEmployee as any).employee_age,22)
 		})
 		it('should be able to delete the entry we modified before', async function() {
@@ -147,14 +147,14 @@ describe('execute', function() {
 				assert.equal(response.status, 404)
 			}
 		})
-		it('should also throw an error', async function() {
+		it('should also throw an error if the routing does not support the verb', async function() {
 			this.timeout(5000)
 			try {
 				aRequest = new httpclient.Request('http://dummy.restapiexample.com/api/v1/employees')
 				aRequest.method = 'PUT'
 				aRequest.body = {
 					'name': 'pnl',
-					'salary': '1',
+					'salary': '1000000',
 					'age': '22'
 				}
 				await execute(aRequest)

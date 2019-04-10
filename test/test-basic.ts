@@ -120,13 +120,13 @@ describe('httpclient', () => {
 			partialRequest.timeout = 20000
 			aRequest.set(partialRequest)
 		// Test successful only if each property has changed
-			assert.notEqual(aRequest.contentType, 'application/json; charset=UTF-8')
-			assert.notEqual(aRequest.method, 'GET')
-			assert.notEqual(aRequest.responseType, 'json')
-			assert.notEqual(aRequest.withCredentials, false)
-			assert.notEqual(aRequest.body, null)
-			assert.notEqual(aRequest.headers, {})
-			assert.notEqual(aRequest.timeout, 30000)
+			assert.equal(aRequest.contentType, 'application/json;')
+			assert.equal(aRequest.method, 'DELETE')
+			assert.equal(aRequest.responseType, 'text')
+			assert.equal(aRequest.withCredentials, true)
+			assert.deepEqual(aRequest.body, {})
+			assert.deepEqual(aRequest.headers, { 'aKey': 'aValue' })
+			assert.equal(aRequest.timeout, 20000)
 		})
 	})
 	describe('filter collection' , function() {
@@ -181,6 +181,7 @@ describe('httpclient', () => {
 		let httpClient = httpclient.newHttpClient()
 		let mainFilterChain: FilterChainImpl
 		it('should apply all its filters before moving to the main chain', async function() {
+			this.timeout(5000)
 			aRequest = new httpclient.Request('https://jsonplaceholder.typicode.com/posts')
 			aRequest.method = 'POST'
 			aRequest.body = {
