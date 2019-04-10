@@ -57,12 +57,12 @@ export namespace httpclient {
 			return new FilterChainImpl(this._filters).doFilter(call)
 		}
 
-	// Same as execute
+		// Same as execute
 		async call<T> (call: Request): Promise<T> {
 			return this.execute<T>(call)
 		}
 
-	// Same as executeForResponse
+		// Same as executeForResponse
 		async callForResponse<T> (call: Request): Promise<Response<T>> {
 			return this.executeForResponse<T>(call)
 		}
@@ -250,7 +250,7 @@ export namespace httpclient {
 		/**
 		 * @param call Is the request we want to modify
 		 * @param filterChain is an Interface that is a Filter, but its goal is to simulate
-		 * nested filters. So it contains an array of filter and its doFilter loops trhough all its filters
+		 * nested filters. So it contains an array of filter and its doFilter loops through all its filters
 		 * before continuing with the main chain of filters
 		 */
 		doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
