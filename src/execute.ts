@@ -28,14 +28,14 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 		xhr.withCredentials = request.withCredentials
 		xhr.timeout = request.timeout
 
-		// This internal method takes the xml request and retrieve headers from it
+		// This internal method takes the xml request and retrieves headers from it
 		const parseResponseHeaders = function(request: XMLHttpRequest): httpclient.Headers {
-			// Create a map of header names to values
+			// Creates a map of header names to values
 			const headerMap: httpclient.Headers = {}
-			// Get the raw header string
+			// Gets the raw header string
 			const headers = request.getAllResponseHeaders()
 			if (headers) {
-				// Convert the header string into an array
+				// Converts the header string into an array
 				// of individual headers
 				const arr = headers.trim().split(/[\r\n]+/)
 
@@ -54,9 +54,9 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 			return headerMap
 		}
 
-		// This inernal method takes an XMLHttpRequest and will return a Response
+		// This internal method takes an XMLHttpRequest and will return a Response
 		// The request of the returned Response will stay as it was, only its readystate will be updated
-		// The rest of the returned Repsponse will be update accordinly to the XMLHttpRequest this method receives
+		// The rest of the returned Repsponse will be update accordingly to the XMLHttpRequest this method receives
 		const buildResponseAndUpdateRequest = function <T>(req: XMLHttpRequest): httpclient.Response<T> {
 			// Puting the newly received ready state in the request the global method received
 			// because we will return it contained in the Response
