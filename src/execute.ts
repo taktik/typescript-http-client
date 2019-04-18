@@ -124,7 +124,7 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 		// Copying the response type from the Request we received
 		xhr.responseType = request.responseType
 
-		// Adapting the main XMLHttpRequest in function of the passed Request
+		// Adapting the main XMLHttpRequest according to the passed Request
 		if (request.responseType === 'json') {
 			xhr.setRequestHeader('Accept', 'application/json')
 		}
