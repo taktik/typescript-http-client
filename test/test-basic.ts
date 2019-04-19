@@ -1,6 +1,7 @@
 import { assert } from 'chai'
 import { spy } from 'sinon'
-import { httpclient } from '../../src/index'
+import { httpclient } from '../src/index'
+import FilterChainImpl from '../src/filterChainImpl';
 
 describe('httpclient', () => {
   // Declaring all variables that we will need
@@ -9,8 +10,8 @@ describe('httpclient', () => {
 	let anotherResponse: httpclient.Response<Object>
 	let aRequest: httpclient.Request
 	let anotherRequest: httpclient.Request
-	let aFilter: httpclient.Filter
-	let anotherFilter: httpclient.Filter
+	let aFilter: httpclient.Filter<any,any>
+	let anotherFilter: httpclient.Filter<any,any>
   // Executed before each test
 	beforeEach(function() {
 	// httpClient instantiation
@@ -23,10 +24,10 @@ describe('httpclient', () => {
 		anotherResponse = new httpclient.Response(anotherRequest, 404, 'NotFound', { 'content-type': 'Application/Json' }, '')
 	// Creating filters
 		aFilter = {
-			doFilter: (call: httpclient.Request, filterChain: httpclient.FilterChain) => Promise.resolve(aResponse)
+			doFilter: (call: httpclient.Request, filterChain: httpclient.FilterChain<any>) => Promise.resolve(aResponse)
 		}
 		anotherFilter = {
-			doFilter: (call: httpclient.Request, filterChain: httpclient.FilterChain) => Promise.resolve(anotherResponse)
+			doFilter: (call: httpclient.Request, filterChain: httpclient.FilterChain<any>) => Promise.resolve(anotherResponse)
 		}
 	// Creating a new implementation of FilterConfig
 		class JsonPlaceHolder implements httpclient.FilterConfig {
@@ -119,20 +120,88 @@ describe('httpclient', () => {
 			partialRequest.timeout = 20000
 			aRequest.set(partialRequest)
 		// Test successful only if each property has changed
-			assert.notEqual(aRequest.contentType, 'application/json; charset=UTF-8')
-			assert.notEqual(aRequest.method, 'GET')
-			assert.notEqual(aRequest.responseType, 'json')
-			assert.notEqual(aRequest.withCredentials, false)
-			assert.notEqual(aRequest.body, null)
-			assert.notEqual(aRequest.headers, {})
-			assert.notEqual(aRequest.timeout, 30000)
+			assert.equal(aRequest.contentType, 'application/json;')
+			assert.equal(aRequest.method, 'DELETE')
+			assert.equal(aRequest.responseType, 'text')
+			assert.equal(aRequest.withCredentials, true)
+			assert.deepEqual(aRequest.body, {})
+			assert.deepEqual(aRequest.headers, { 'aKey': 'aValue' })
+			assert.equal(aRequest.timeout, 20000)
 		})
 	})
-  // describe('what to describe', function() {
-  //   it('should do something', function() {
-
-  //     assert.equal(1,1)
-  //   })
-  // })
-  //
+	describe('filter collection' , function() {
+		class Post {
+			'userId': string
+			'Id': number
+			'title': string
+			'body': string
+		}
+		class FirstStep implements httpclient.Filter<Post, Post> {
+			async doFilter(call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
+				(call.body as Post).body = '(╯'
+				const response = await filterChain.doFilter(call)
+				return response
+			}
+		}
+		class SecondStep implements httpclient.Filter<Post, Post> {
+			async doFilter(call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
+				(call.body as Post).body += '°□'
+				const response = await filterChain.doFilter(call)
+				return response
+			}
+		}
+		class ThirdStep implements httpclient.Filter<Post, Post> {
+			async doFilter(call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
+				(call.body as Post).body += '°）'
+				const response = await filterChain.doFilter(call)
+				return response
+			}
+		}
+		class FourthStep implements httpclient.Filter<Post, Post> {
+			async doFilter(call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
+				(call.body as Post).body += '╯︵ '
+				const response = await filterChain.doFilter(call)
+				return response
+			}
+		}
+		class FifthStep implements httpclient.Filter<Post, Post> {
+			async doFilter(call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
+				(call.body as Post).body += '┻━'
+				const response = await filterChain.doFilter(call)
+				return response
+			}
+		}
+		class LastStep implements httpclient.Filter<Post, Post> {
+			async doFilter(call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
+				(call.body as Post).body += '┻'
+				const response = await filterChain.doFilter(call)
+				return response
+			}
+		}
+		let httpClient = httpclient.newHttpClient()
+		let mainFilterChain: FilterChainImpl
+		it('should apply all its filters before moving to the main chain', async function() {
+			this.timeout(5000)
+			aRequest = new httpclient.Request('https://jsonplaceholder.typicode.com/posts')
+			aRequest.method = 'POST'
+			aRequest.body = {
+				'userId': 1,
+				'id': 101,
+				'title': 'My code does not work! AAAArgh!',
+				'body': ''
+			}
+			let packOfFilters = []
+			packOfFilters[0] = new httpclient.InstalledFilter(new ThirdStep() , '3')
+			packOfFilters[1] = new httpclient.InstalledFilter(new FourthStep() , '4')
+			packOfFilters[2] = new httpclient.InstalledFilter(new FifthStep() , '5')
+			let filterCollection = new httpclient.FilterCollection(packOfFilters)
+			httpClient.addFilter(new FirstStep(), '1')
+			httpClient.addFilter(new SecondStep(), '2')
+			httpClient.addFilter(filterCollection, '3,4,5')
+			httpClient.addFilter(new LastStep(), '6')
+			mainFilterChain = new FilterChainImpl((httpClient as any)._filters)
+			const theResponse = await mainFilterChain.doFilter(aRequest)
+			assert.equal((theResponse.request.body as Post).body, '(╯°□°）╯︵ ┻━┻')
+		})
+	})
 })
