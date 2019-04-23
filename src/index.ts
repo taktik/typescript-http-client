@@ -11,13 +11,13 @@ export namespace httpclient {
 	 * Add a filter to its filter list
 	 */
 	export interface HttpClient {
-		executeForResponse<T> (request: Request): Promise<Response<T>>
+		executeForResponse<T> (request: Request): Promise<Response<T | null>>
 
-		callForResponse<T> (request: Request): Promise<Response<T>>
+		callForResponse<T> (request: Request): Promise<Response<T | null>>
 
-		execute<T> (request: Request): Promise<T>
+		execute<T> (request: Request): Promise<T | null>
 
-		call<T> (request: Request): Promise<T>
+		call<T> (request: Request): Promise<T | null>
 
 		addFilter (filter: Filter<any, any>, name: string, config?: FilterConfig): FilterRegistration
 	}
@@ -47,8 +47,8 @@ export namespace httpclient {
 		}
 
 		// Takes a Request and returns the body of the promise returned by the method callForResponse
-		async execute<T>(call: Request): Promise<T> {
-			return (await this.callForResponse<T>(call)).body
+		async execute<T>(call: Request): Promise<T | null> {
+			return (await this.callForResponse<T | null>(call)).body
 		}
 
 		// Takes a Request, creates the main chain of filters with the current filters of httpclient
@@ -58,7 +58,7 @@ export namespace httpclient {
 		}
 
 		// Same as execute
-		async call<T> (call: Request): Promise<T> {
+		async call<T> (call: Request): Promise<T | null> {
 			return this.execute<T>(call)
 		}
 
@@ -75,6 +75,24 @@ export namespace httpclient {
 	}
 	// Contains every parameter needed for a request as properties
 	export class Request {
+
+		private _xhr: XMLHttpRequest | undefined
+		private aborted: boolean = false
+		set xhr(xhr: XMLHttpRequest | undefined) {
+			if (this.aborted) {
+				throw Error('request aborted')
+			}
+			this._xhr = xhr
+		}
+		get xhr (): XMLHttpRequest | undefined {
+			return this._xhr
+		}
+		abort() {
+			if (this.xhr) {
+				this.xhr.abort()
+			}
+			this.aborted = true
+		}
 		url: string
 		contentType: string = 'application/json; charset=UTF-8'
 		// A way to declare an enumeration (can be anything because of the string but the IDE will suggest the 4 first verbs)
@@ -208,7 +226,7 @@ export namespace httpclient {
 					 readonly status: number,
 					 readonly statusText: string,
 					 readonly headers: Headers,
-					 readonly body: T
+					 readonly body: T | null
 					 ) {
 		}
 
