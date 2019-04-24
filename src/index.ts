@@ -11,13 +11,13 @@ export namespace httpclient {
 	 * Add a filter to its filter list
 	 */
 	export interface HttpClient {
-		executeForResponse<T> (request: Request): Promise<Response<T | null>>
+		executeForResponse<T> (request: Request): Promise<Response<T>>
 
-		callForResponse<T> (request: Request): Promise<Response<T | null>>
+		callForResponse<T> (request: Request): Promise<Response<T>>
 
-		execute<T> (request: Request): Promise<T | null>
+		execute<T> (request: Request): Promise<T>
 
-		call<T> (request: Request): Promise<T | null>
+		call<T> (request: Request): Promise<T>
 
 		addFilter (filter: Filter<any, any>, name: string, config?: FilterConfig): FilterRegistration
 	}
@@ -47,8 +47,9 @@ export namespace httpclient {
 		}
 
 		// Takes a Request and returns the body of the promise returned by the method callForResponse
-		async execute<T>(call: Request): Promise<T | null> {
-			return (await this.callForResponse<T | null>(call)).body
+		async execute<T>(call: Request): Promise<T> {
+			return (await this.callForResponse<T>(call)).body!
+			// body can be null but in such cases, an error will be throw
 		}
 
 		// Takes a Request, creates the main chain of filters with the current filters of httpclient
@@ -58,7 +59,7 @@ export namespace httpclient {
 		}
 
 		// Same as execute
-		async call<T> (call: Request): Promise<T | null> {
+		async call<T> (call: Request): Promise<T> {
 			return this.execute<T>(call)
 		}
 
