@@ -24,7 +24,15 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 
 		// Creating a new XMLHttpRequest and giving it two properties from the request this method received
 		// This will be the request we will send to the server
-		try {
+		if (request.isAborted) {
+			request.readyState = 4
+			reject(new httpclient.Response<T>(request,
+				0,
+				'OK',
+				{},
+				null
+			))
+		} else {
 			const xhr = new XMLHttpRequest()
 			request.xhr = xhr
 			xhr.withCredentials = request.withCredentials
@@ -143,18 +151,6 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 
 			// Sending request to the server
 			xhr.send(body as (Document | BodyInit | null))
-		} catch (err) {
-			if (err.message === 'request aborted') {
-				request.readyState = 4
-				reject(new httpclient.Response<T>(request,
-					0,
-					'OK',
-					{},
-					null
-				))
-			} else {
-				throw err
-			}
 		}
 	})
 }

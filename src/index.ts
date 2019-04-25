@@ -88,6 +88,9 @@ export namespace httpclient {
 		get xhr (): XMLHttpRequest | undefined {
 			return this._xhr
 		}
+		get isAborted(): boolean {
+			return this.aborted
+		}
 		abort() {
 			if (this.xhr) {
 				this.xhr.abort()
