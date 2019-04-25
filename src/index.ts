@@ -275,7 +275,7 @@ export namespace httpclient {
 		 * nested filters. So it contains an array of filter and its doFilter loops through all its filters
 		 * before continuing with the main chain of filters
 		 */
-		doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
+		doFilter (call: Request, filterChain: FilterChain<any>): Promise<Response<any>> {
 			return new FilterChainImpl(this.filters, 0, request => filterChain.doFilter(request)).doFilter(call)
 		}
 	}
