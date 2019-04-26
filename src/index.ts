@@ -75,6 +75,10 @@ export namespace httpclient {
 	}
 	// Contains every parameter needed for a request as properties
 	export class Request {
+		upload: {
+			onprogress: { (event: Event): void }
+			onloadstart: { (event: Event): void }
+		}
 		url: string
 		contentType: string = 'application/json; charset=UTF-8'
 		// A way to declare an enumeration (can be anything because of the string but the IDE will suggest the 4 first verbs)
@@ -116,6 +120,10 @@ export namespace httpclient {
 			}
 			if (timeout) {
 				this.timeout = timeout
+			}
+			this.upload = {
+				onprogress: () => void 0,
+				onloadstart: () => void 0
 			}
 		}
 
