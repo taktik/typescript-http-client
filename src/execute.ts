@@ -37,8 +37,6 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 			request.xhr = xhr
 			xhr.withCredentials = request.withCredentials
 			xhr.timeout = request.timeout
-			xhr.upload.onloadstart = request.upload.onloadstart
-			xhr.upload.onprogress = request.upload.onprogress
 
 			// This internal method takes the xml request and retrieves headers from it
 			const parseResponseHeaders = function(request: XMLHttpRequest): httpclient.Headers {
