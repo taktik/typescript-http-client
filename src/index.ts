@@ -48,7 +48,8 @@ export namespace httpclient {
 
 		// Takes a Request and returns the body of the promise returned by the method callForResponse
 		async execute<T>(call: Request): Promise<T> {
-			return (await this.callForResponse<T>(call)).body
+			return (await this.callForResponse<T>(call)).body!
+			// body can be null but in such cases, an error will be throw
 		}
 
 		// Takes a Request, creates the main chain of filters with the current filters of httpclient
@@ -75,6 +76,27 @@ export namespace httpclient {
 	}
 	// Contains every parameter needed for a request as properties
 	export class Request {
+
+		private _xhr: XMLHttpRequest | undefined
+		private aborted: boolean = false
+		set xhr(xhr: XMLHttpRequest | undefined) {
+			if (this.aborted) {
+				throw Error('request aborted')
+			}
+			this._xhr = xhr
+		}
+		get xhr (): XMLHttpRequest | undefined {
+			return this._xhr
+		}
+		get isAborted(): boolean {
+			return this.aborted
+		}
+		abort() {
+			if (this.xhr) {
+				this.xhr.abort()
+			}
+			this.aborted = true
+		}
 		url: string
 		contentType: string = 'application/json; charset=UTF-8'
 		// A way to declare an enumeration (can be anything because of the string but the IDE will suggest the 4 first verbs)
@@ -208,7 +230,7 @@ export namespace httpclient {
 					 readonly status: number,
 					 readonly statusText: string,
 					 readonly headers: Headers,
-					 readonly body: T
+					 readonly body: T | null
 					 ) {
 		}
 

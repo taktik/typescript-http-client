@@ -1,7 +1,7 @@
 import { assert } from 'chai'
-import { spy } from 'sinon'
+import { spy, fakeServer, SinonFakeServer } from 'sinon'
 import { httpclient } from '../src/index'
-import FilterChainImpl from '../src/filterChainImpl';
+import FilterChainImpl from '../src/filterChainImpl'
 
 describe('httpclient', () => {
   // Declaring all variables that we will need
@@ -97,7 +97,7 @@ describe('httpclient', () => {
 	})
 	describe('callForResponse' , function() {
 		it('should return a Response object', async function() {
-			const theResponse: httpclient.Response<Object> = await httpClient.callForResponse<Object>(aRequest)
+			const theResponse: httpclient.Response<Object | null> = await httpClient.callForResponse<Object>(aRequest)
 			assert.instanceOf(theResponse, httpclient.Response)
 		})
 	})
@@ -179,7 +179,7 @@ describe('httpclient', () => {
 			}
 		}
 		let httpClient = httpclient.newHttpClient()
-		let mainFilterChain: FilterChainImpl
+		let mainFilterChain: httpclient.FilterChain<any>
 		it('should apply all its filters before moving to the main chain', async function() {
 			this.timeout(5000)
 			aRequest = new httpclient.Request('https://jsonplaceholder.typicode.com/posts')
@@ -202,6 +202,57 @@ describe('httpclient', () => {
 			mainFilterChain = new FilterChainImpl((httpClient as any)._filters)
 			const theResponse = await mainFilterChain.doFilter(aRequest)
 			assert.equal((theResponse.request.body as Post).body, '(╯°□°）╯︵ ┻━┻')
+		})
+	})
+	describe('cancel request', () => {
+		let server: SinonFakeServer
+		function wait(ms: number) {
+			return new Promise(resolve => setTimeout(resolve, ms))
+		}
+		class WaitFilter implements httpclient.Filter<any, any> {
+			async doFilter(call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
+				await wait(10)
+				return filterChain.doFilter(call)
+			}
+		}
+		before(function() {
+			server = fakeServer.create()
+		})
+		after(function() {
+			server.restore()
+		})
+		it('should reject with request after filters operations', async () => {
+			aRequest = new httpclient.Request('an.api.dummy/resource')
+			const client = httpclient.newHttpClient()
+			const waitFilter = new WaitFilter()
+			spy(waitFilter, 'doFilter')
+			client.addFilter(waitFilter, 'filter')
+			try {
+				const exec = client.execute<any>(aRequest)
+				aRequest.abort()
+				const result = await exec
+				assert.isTrue(false, 'previous line should throw an error')
+			} catch (err) {
+				const response = err as httpclient.Response<any>
+				assert.equal(response.request.readyState, 4, 'request done')
+				assert.equal(response.status, 0, 'UNSENT')
+				assert((waitFilter.doFilter as any).calledOnce)
+			}
+		})
+		it('should reject with response', async () => {
+			aRequest = new httpclient.Request('an.api.dummy/resource')
+			const client = httpclient.newHttpClient()
+			try {
+				const exec = client.execute<any>(aRequest)
+				aRequest.abort()
+				const result = await exec
+				assert.isTrue(false, 'previous line should throw an error')
+			} catch (err) {
+				const response = err as httpclient.Response<any>
+				assert.equal(response.request.readyState, 4, 'request done')
+				assert.equal(response.status, 0, 'UNSENT')
+				assert.isNull(response.body)
+			}
 		})
 	})
 })
