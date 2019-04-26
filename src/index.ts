@@ -77,6 +77,11 @@ export namespace httpclient {
 	// Contains every parameter needed for a request as properties
 	export class Request {
 
+		upload: {
+			onprogress: { (event: Event): void }
+			onloadstart: { (event: Event): void }
+		}
+
 		private _xhr: XMLHttpRequest | undefined
 		private aborted: boolean = false
 		set xhr(xhr: XMLHttpRequest | undefined) {
@@ -138,6 +143,10 @@ export namespace httpclient {
 			}
 			if (timeout) {
 				this.timeout = timeout
+			}
+			this.upload = {
+				onprogress: () => void 0,
+				onloadstart: () => void 0
 			}
 		}
 
