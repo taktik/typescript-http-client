@@ -97,6 +97,10 @@ export namespace httpclient {
 			}
 			this.aborted = true
 		}
+		upload: {
+			onprogress: { (event: Event): void }
+			onloadstart: { (event: Event): void }
+		}
 		url: string
 		contentType: string = 'application/json; charset=UTF-8'
 		// A way to declare an enumeration (can be anything because of the string but the IDE will suggest the 4 first verbs)
@@ -138,6 +142,10 @@ export namespace httpclient {
 			}
 			if (timeout) {
 				this.timeout = timeout
+			}
+			this.upload = {
+				onprogress: () => void 0,
+				onloadstart: () => void 0
 			}
 		}
 
@@ -275,7 +283,7 @@ export namespace httpclient {
 		 * nested filters. So it contains an array of filter and its doFilter loops through all its filters
 		 * before continuing with the main chain of filters
 		 */
-		doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
+		doFilter (call: Request, filterChain: FilterChain<any>): Promise<Response<any>> {
 			return new FilterChainImpl(this.filters, 0, request => filterChain.doFilter(request)).doFilter(call)
 		}
 	}
