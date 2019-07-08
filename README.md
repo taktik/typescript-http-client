@@ -141,7 +141,7 @@ class TodoTransformer implements Filter<Todo, Todo> {
 ![](images/filters.jpg)
 
 # Libaries
-The library log4javascript is useful in order to configure the ouptup of the program in the form of logs. Depending on the setting, some outputs (traces for exemple) may not be visible in the console.
+The library log4javascript is useful in order to configure the output of the program in the form of logs. Depending on the setting, some outputs (traces for exemple) may not be visible in the console.
 
 # Testing
 In the tests, you need to first in indicate which name space you are testing, and then precise which method. Both using describe. The entity tested is the first argument of describe.
