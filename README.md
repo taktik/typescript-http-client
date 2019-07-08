@@ -145,6 +145,6 @@ The library log4javascript is useful in order to configure the output of the pro
 
 # Testing
 In the tests, you need to first in indicate which name space you are testing, and then precise which method. Both using describe. The entity tested is the first argument of describe.
-The second argument of describe, is a function. In the function, you need another function called: it. This function also takes two arguments. The first is a string that is usefull only for future developpers (does nothig in the code) saying what result we expect from our test, and the second is once again a method, ending with an assert this time. This last method is the test.
+The second argument of describe, is a function. In the function, you need another function called: it. This function also takes two arguments. The first is a string that is usefull only for future developpers (does nothing in the code) saying what result we expect from our test, and the second is once again a method, ending with an assert this time. This last method is the test.
 
 The hook beforeEach executes before every test.
