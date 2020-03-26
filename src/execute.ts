@@ -127,7 +127,19 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 					log.trace(xhr.status + ' ' + traceMessage)
 				}
 				if (xhr.status >= 200 && xhr.status < 400) {
-					// Success!
+					if (xhr.readyState === 4 && !xhr.response) {
+						execute(request)
+							.then(() => {
+								if (xhr.response) {
+									resolveRequest(xhr)
+								} else {
+									rejectRequest(xhr)
+								}
+							})
+							.catch(() => {
+								rejectRequest(xhr)
+							})
+					}
 					resolveRequest(xhr)
 				} else {
 					rejectRequest(xhr)
