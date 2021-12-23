@@ -127,7 +127,7 @@ describe('execute', function() {
 				const response = await responsePromise
 				assert.isTrue(false, 'previous line should throw an error')
 			} catch (error) {
-				const response: httpclient.Response<Object> = error
+				const response = error as httpclient.Response<Object>
 				assert.equal(response.status, 404)
 			}
 		})
@@ -154,7 +154,7 @@ describe('execute', function() {
 				const response = await responsePromise
 				assert.isTrue(false, 'previous line should throw an error')
 			} catch (error) {
-				const response: httpclient.Response<Object> = error
+				const response = error as httpclient.Response<Object>
 				assert.equal(response.status,500)
 			}
 		})

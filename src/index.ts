@@ -1,9 +1,7 @@
-import * as log4javascript from 'log4javascript'
 import FilterChainImpl from './filterChainImpl'
+import type { Logger } from 'log4javascript'
 
 export namespace httpclient {
-	const filterLog = log4javascript.getLogger('http.client.filter')
-
 	/**
 	 * In order to be an HttpClient, the class should:
 	 * Make a call to the server and returning a response
@@ -316,6 +314,16 @@ export namespace httpclient {
 	*/
 	export function newHttpClient(): HttpClient {
 		return new HttpClientImpl()
+	}
+
+	let log: Logger
+
+	export function getLogger(): Logger | undefined {
+		return log
+	}
+
+	export function setLogger(logger: Logger) {
+		log = logger
 	}
 
 	// Utility methods

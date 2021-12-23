@@ -1,13 +1,12 @@
 import { httpclient } from './index'
-import * as log4javascript from 'log4javascript'
 
 // Global function that takes a request (after being filtered), send it to the API and gives us its response
 export default function execute<T>(request: httpclient.Request): Promise<httpclient.Response<T>> {
-	const log = log4javascript.getLogger('http.client')
+	const log = httpclient.getLogger()
 	// Returns a new Promise
 	return new Promise<httpclient.Response<T>>((resolve, reject) => {
 		let traceMessage: String | undefined
-		if (log.isTraceEnabled()) {
+		if (log?.isTraceEnabled()) {
 			// Takes care of the logs
 			traceMessage = `${request.method} ${request.url}`
 			if (request.body) {
@@ -85,7 +84,7 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 					&& responseBody.length === req.responseText.length
 					&& req.responseText.length > 0) {
 					// TODO: if error here around, it isn't bubble up ! Please AB fix it
-					log.trace(`Parsing JSON`)
+					log?.trace(`Parsing JSON`)
 					try {
 						responseBody = JSON.parse(responseBody)
 					} catch (e) {
@@ -115,7 +114,7 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 
 			// Defining the main xmlHttpRequest properties (methods)
 			xhr.onerror = () => {
-				if (log.isTraceEnabled()) {
+				if (log?.isTraceEnabled()) {
 					log.trace(xhr.status + ' ' + traceMessage)
 				}
 				rejectRequest(xhr)
@@ -123,7 +122,7 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 			xhr.onabort = xhr.onerror
 			xhr.ontimeout = xhr.onerror
 			xhr.onload = () => {
-				if (log.isTraceEnabled()) {
+				if (log?.isTraceEnabled()) {
 					log.trace(xhr.status + ' ' + traceMessage)
 				}
 				if (xhr.status >= 200 && xhr.status < 400) {
@@ -154,7 +153,7 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 			}
 
 			// Sending request to the server
-			xhr.send(body as (Document | BodyInit | null))
+			xhr.send(body as (Document | XMLHttpRequestBodyInit | null))
 		}
 	})
 }

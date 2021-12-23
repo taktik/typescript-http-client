@@ -1,9 +1,5 @@
 import { httpclient } from './index'
 import execute from './execute'
-import * as log4javascript from 'log4javascript'
-
-const filterLog = log4javascript.getLogger('http.client.filter')
-
 export default class FilterChainImpl implements httpclient.FilterChain<any> {
 	constructor(readonly filters: httpclient.InstalledFilter[], readonly fromIndex: number = 0, readonly callBack: (request: httpclient.Request) => Promise<httpclient.Response<any>> = execute) {
 	}
@@ -28,7 +24,7 @@ export default class FilterChainImpl implements httpclient.FilterChain<any> {
 		if (index < this.filters.length) {
 			const installedFilter = this.filters[index]
 			// We found a filter to apply
-			filterLog.trace('Applying filter ' + installedFilter.name)
+			httpclient.getLogger()?.trace('Applying filter ' + installedFilter.name)
 			// We return the filter of the installedFilter we found and applied to it its own .doFilter method which is not the same method
 			// passing to it the same request and a new FilterChainImpl with the list of filters, a counter incremented by 1, and the callback method
 			return installedFilter.filter.doFilter(request, new FilterChainImpl(this.filters, index + 1, this.callBack))
