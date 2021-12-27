@@ -13,25 +13,7 @@ module.exports = function(config) {
     frameworks: ['mocha', "karma-typescript"],
 
     karmaTypescriptConfig: {
-      compilerOptions: {
-        "target": "es5",
-        module: "commonjs",
-        "moduleResolution": "node",
-        "experimentalDecorators": true,
-        //
-        "emitDecoratorMetadata": true,
-        /* Strict Type-Checking Options */
-        "strict": true,                           /* Enable all strict type-checking options. */
-        "strictNullChecks": true,
-        "noImplicitThis": true,
-        // "noImplicitAny": true,
-        "allowSyntheticDefaultImports": true,
-        "lib": ["es2017", "es6", "es5", "dom"],
-        "sourceMap": true,
-        "outDir": "./dist",
-        "baseUrl": "./",
-        allowJs: true,
-      },
+		tsconfig: "./tsconfig.json",
     },
 
     // list of files / patterns to load in the browser

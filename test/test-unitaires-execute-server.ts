@@ -1,6 +1,6 @@
 import { assert } from 'chai'
 import execute from '../src/execute'
-import { httpclient } from '../src/index'
+import { Request, Response } from '../src/index'
 import sinon, { SinonFakeServer } from 'sinon'
 
 describe('execute', function() {
@@ -14,7 +14,7 @@ describe('execute', function() {
 		})
 
 		it('should be able to create an entry', async function() {
-			const aRequest = new httpclient.Request('http://dummy.restapiexample.com/api/v1/create')
+			const aRequest = new Request('http://dummy.restapiexample.com/api/v1/create')
 			aRequest.method = 'POST'
 			aRequest.body = {
 				'name': 'auDD',
@@ -33,7 +33,7 @@ describe('execute', function() {
 			const postResponsePromises = execute(aRequest)
 			server.respond()
 			const postResponse = await postResponsePromises
-			assert.equal((postResponse as any).status, 200)
+			assert.equal(postResponse.status, 200)
 		})
 		it('should be able to find the entry we posted before', async function() {
 
@@ -51,8 +51,8 @@ describe('execute', function() {
 				]
 			)
 
-			const aRequest = new httpclient.Request('http://dummy.restapiexample.com/api/v1/employees')
-			const postResponsePromises = execute<any[]>(aRequest)
+			const aRequest = new Request('http://dummy.restapiexample.com/api/v1/employees')
+			const postResponsePromises = execute<unknown[]>(aRequest)
 			server.respond()
 			const getResponse = await postResponsePromises
 			const employees = getResponse.body
@@ -77,7 +77,7 @@ describe('execute', function() {
 					JSON.stringify(expectedResponse)
 				]
 			)
-			const aRequest = new httpclient.Request('http://dummy.restapiexample.com/api/v1/update/anID')
+			const aRequest = new Request('http://dummy.restapiexample.com/api/v1/update/anID')
 			aRequest.method = 'PUT'
 			aRequest.body = {
 				'name': 'pnl',
@@ -100,7 +100,7 @@ describe('execute', function() {
 					JSON.stringify({ expectedResponse: 'any' })
 				]
 			)
-			const aRequest = new httpclient.Request('http://dummy.restapiexample.com/api/v1/delete/idOfCreatedObject')
+			const aRequest = new Request('http://dummy.restapiexample.com/api/v1/delete/idOfCreatedObject')
 			aRequest.method = 'DELETE'
 			const postResponsePromises = execute(aRequest)
 			server.respond()
@@ -121,13 +121,13 @@ describe('execute', function() {
 						'not found'
 					]
 				)
-				const aRequest = new httpclient.Request('http://dummy.restapiexample.com/i@#ccidently_mizspeld976theurl/')
+				const aRequest = new Request('http://dummy.restapiexample.com/i@#ccidently_mizspeld976theurl/')
 				const responsePromise = execute(aRequest)
 				server.respond()
-				const response = await responsePromise
+				await responsePromise
 				assert.isTrue(false, 'previous line should throw an error')
 			} catch (error) {
-				const response = error as httpclient.Response<Object>
+				const response = error as Response<unknown>
 				assert.equal(response.status, 404)
 			}
 		})
@@ -142,7 +142,7 @@ describe('execute', function() {
 						'server error'
 					]
 				)
-				const aRequest = new httpclient.Request('http://dummy.restapiexample.com/api/v1/employees')
+				const aRequest = new Request('http://dummy.restapiexample.com/api/v1/employees')
 				aRequest.method = 'PUT'
 				aRequest.body = {
 					'name': 'pnl',
@@ -151,10 +151,10 @@ describe('execute', function() {
 				}
 				const responsePromise = execute(aRequest)
 				server.respond()
-				const response = await responsePromise
+				await responsePromise
 				assert.isTrue(false, 'previous line should throw an error')
 			} catch (error) {
-				const response = error as httpclient.Response<Object>
+				const response = error as Response<unknown>
 				assert.equal(response.status,500)
 			}
 		})

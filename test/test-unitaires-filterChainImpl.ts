@@ -1,5 +1,13 @@
 import { assert } from 'chai'
-import { httpclient } from '../src/index'
+import {
+	Request,
+	HttpClient,
+	Filter,
+	FilterChain,
+	Response,
+	FilterConfig,
+	newHttpClient,
+} from '../src/index'
 import filterChainImpl from '../src/filterChainImpl'
 
 describe('execute', function() {
@@ -9,37 +17,38 @@ describe('execute', function() {
 		'title': string
 		'body': string
 	}
-	let aRequest: httpclient.Request
+	let aRequest: Request
 	let mainFilterChain: filterChainImpl
-	let mainClient: httpclient.HttpClient
-	let idOfEntry: number
-	class TitleChanges implements httpclient.Filter<Post, Post> {
-		async doFilter(call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
+	let mainClient: HttpClient
+
+	class TitleChanges implements Filter<Post, Post> {
+		async doFilter(call: Request, filterChain: FilterChain<Post>): Promise<Response<Post>> {
 			(call.body as Post).title = 'Where are you noww'
 			const response = await filterChain.doFilter(call)
 			return response
 		}
 	}
-	class RemoveLastLetterOfTitle implements httpclient.Filter<Post, Post> {
-		async doFilter(call: httpclient.Request, filterChain: httpclient.FilterChain<any>): Promise<httpclient.Response<any>> {
+	class RemoveLastLetterOfTitle implements Filter<Post, Post> {
+		async doFilter(call: Request, filterChain: FilterChain<Post>): Promise<Response<Post>> {
 			(call.body as Post).title = (call.body as Post).title.slice(0, -1)
 			const response = await filterChain.doFilter(call)
 			return response
 		}
 	}
-	class OnlyWhenCreating implements httpclient.FilterConfig {
-		enabled(call: httpclient.Request): boolean {
+	class OnlyWhenCreating implements FilterConfig {
+		enabled(call: Request): boolean {
 			return call.method === 'POST'
 		}
 	}
 	before(function() {
-		mainClient = httpclient.newHttpClient()
+		mainClient = newHttpClient()
 	})
 	it('should correctly apply two filters in the right order and execute the request', async function() {
 		mainClient.addFilter(new TitleChanges(), 'nameBecomesIvann')
 		mainClient.addFilter(new RemoveLastLetterOfTitle(), 'removeLastLetterOfName')
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
 		mainFilterChain = new filterChainImpl((mainClient as any)._filters)
-		aRequest = new httpclient.Request('https://jsonplaceholder.typicode.com/posts')
+		aRequest = new Request('https://jsonplaceholder.typicode.com/posts')
 		aRequest.method = 'POST'
 		aRequest.body = {
 			'userId': 1,
@@ -51,11 +60,13 @@ describe('execute', function() {
 		assert.equal((theResponse.request.body as Post).title, 'Where are you now')
 	})
 	it('should only apply filters to the requests that matches the config', async function() {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
 		(mainClient as any)._filters = []
 		mainClient.addFilter(new TitleChanges(), 'changeTitle', new OnlyWhenCreating())
 		mainClient.addFilter(new RemoveLastLetterOfTitle(), 'removeLastLetterOfTitle', new OnlyWhenCreating())
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
 		mainFilterChain = new filterChainImpl((mainClient as any)._filters)
-		aRequest = new httpclient.Request('https://jsonplaceholder.typicode.com/posts/6')
+		aRequest = new Request('https://jsonplaceholder.typicode.com/posts/6')
 		aRequest.method = 'PUT'
 		aRequest.body = {
 			'userId': 1,

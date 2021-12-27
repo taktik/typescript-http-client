@@ -10,13 +10,11 @@ A simple TypeScript HTTP client with Promise-based API and advanced filtering su
 
 ```typescript
 import expect from 'ceylon';
-import { httpclient } from 'typescript-http-client'
-import Response = httpclient.Response
-import Request = httpclient.Request
+import { Response, Request, newHttpClient } from 'typescript-http-client'
 
 (async () => {
   // Get a new client
-  const client = httpclient.newHttpClient()
+  const client = newHttpClient()
   // Build the request
   const request = new Request('https://jsonplaceholder.typicode.com/todos/1', { responseType: 'text' })
   // Execute the request and get the response body as a string
@@ -37,9 +35,7 @@ import Request = httpclient.Request
 
 ```typescript
 import expect from 'ceylon';
-import { httpclient } from 'typescript-http-client'
-import Response = httpclient.Response
-import Request = httpclient.Request
+import { Response, Request, newHttpClient } from 'typescript-http-client'
 
 class Todo {
   completed: boolean
@@ -50,7 +46,7 @@ class Todo {
 
 (async () => {
   // Get a new client
-  const client = httpclient.newHttpClient()
+  const client = newHttpClient()
   // Build the request
   const request = new Request('https://jsonplaceholder.typicode.com/todos/1')
   // Execute the request and get the response body as a "Todo" object
@@ -89,10 +85,7 @@ This example transforms the fetched Todos and modify their title
 
 ```typescript
 import expect from 'ceylon';
-import { httpclient } from 'typescript-http-client'
-import Response = httpclient.Response
-import Request = httpclient.Request
-import Filter = httpclient.Filter
+import { Response, Request, Filter, FilterChain, newHttpClient } from 'typescript-http-client'
 
 class Todo {
   completed: boolean
@@ -103,7 +96,7 @@ class Todo {
 
 // Transform Todos : Alter title
 class TodoTransformer implements Filter<Todo, Todo> {
-  async doFilter (call: httpclient.Request, filterChain: httpclient.FilterChain<Todo>): Promise<httpclient.Response<Todo>> {
+  async doFilter (call: Request, filterChain: FilterChain<Todo>): Promise<Response<Todo>> {
     const response = await filterChain.doFilter(call)
     const todo = response.body
     todo.title = 'Modified title'
@@ -113,7 +106,7 @@ class TodoTransformer implements Filter<Todo, Todo> {
 
 (async () => {
   // Get a new client
-  const client = httpclient.newHttpClient()
+  const client = newHttpClient()
   // Add our Todo tranformer filter
   client.addFilter(new TodoTransformer(), 'Todo transformer', {
     // Only apply to GET request with URL starting with 

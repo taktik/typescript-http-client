@@ -1,11 +1,12 @@
-import { httpclient } from './index'
+import { Request, Response, getLogger, Headers } from './index'
 
 // Global function that takes a request (after being filtered), send it to the API and gives us its response
-export default function execute<T>(request: httpclient.Request): Promise<httpclient.Response<T>> {
-	const log = httpclient.getLogger()
+export default function execute<T>(request: Request): Promise<Response<T>> {
+	const log = getLogger()
 	// Returns a new Promise
-	return new Promise<httpclient.Response<T>>((resolve, reject) => {
-		let traceMessage: String | undefined
+	return new Promise<Response<T>>((resolve, reject) => {
+		let traceMessage = ''
+
 		if (log?.isTraceEnabled()) {
 			// Takes care of the logs
 			traceMessage = `${request.method} ${request.url}`
@@ -25,7 +26,7 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 		// This will be the request we will send to the server
 		if (request.isAborted) {
 			request.readyState = 4
-			reject(new httpclient.Response<T>(request,
+			reject(new Response<T>(request,
 				0,
 				'OK',
 				{},
@@ -42,9 +43,9 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 			} catch (e) {/* ignore error NodeJs only */}
 
 			// This internal method takes the xml request and retrieves headers from it
-			const parseResponseHeaders = function(request: XMLHttpRequest): httpclient.Headers {
+			const parseResponseHeaders = function(request: XMLHttpRequest): Headers {
 				// Creates a map of header names to values
-				const headerMap: httpclient.Headers = {}
+				const headerMap: Headers = {}
 				// Gets the raw header string
 				const headers = request.getAllResponseHeaders()
 				if (headers) {
@@ -58,7 +59,7 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 						if (line.length > 0) {
 							const parts = line.split(': ')
 							if (parts.length >= 2) {
-								const header = parts.shift()!
+								const header = parts.shift() as string
 								headerMap[header] = parts.join(': ')
 							}
 						}
@@ -70,12 +71,12 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 			// This internal method takes an XMLHttpRequest and will return a Response
 			// The request of the returned Response will stay as it was, only its readystate will be updated
 			// The rest of the returned Repsponse will be update accordingly to the XMLHttpRequest this method receives
-			const buildResponseAndUpdateRequest = function <T>(req: XMLHttpRequest): httpclient.Response<T> {
+			const buildResponseAndUpdateRequest = function <T>(req: XMLHttpRequest): Response<T> {
 				// Puting the newly received ready state in the request the global method received
 				// because we will return it contained in the Response
 				request.readyState = req.readyState
 				// Getting the response of the XMLHttpRequest we receive
-				let responseBody = req.response
+				let responseBody: unknown = req.response
 				// Some implementations of XMLHttpRequest ignore the "json" responseType
 				// Checking if the form of the request the parent method received is correct
 				if (request.responseType === 'json'
@@ -94,7 +95,7 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 				// We return a response with the request of the parent method (only the readystate has changed)
 				// We add to it a couple of properties from the request this method received
 				// And wrap it up into our Response class
-				return new httpclient.Response<T>(request,
+				return new Response<T>(request,
 					req.status,
 					req.statusText,
 					parseResponseHeaders(req),
@@ -104,18 +105,18 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 
 			// When the promise is returned, we call the buildResponseAndUpdateRequestMethod
 			// And this is what will give us our final Response
-			const rejectRequest = function <T>(req: XMLHttpRequest) {
+			const rejectRequest = function (req: XMLHttpRequest) {
 				reject(buildResponseAndUpdateRequest(req))
 			}
 
-			const resolveRequest = function <T>(req: XMLHttpRequest) {
+			const resolveRequest = function (req: XMLHttpRequest) {
 				resolve(buildResponseAndUpdateRequest(req))
 			}
 
 			// Defining the main xmlHttpRequest properties (methods)
 			xhr.onerror = () => {
 				if (log?.isTraceEnabled()) {
-					log.trace(xhr.status + ' ' + traceMessage)
+					log.trace(`${xhr.status} ${traceMessage}`)
 				}
 				rejectRequest(xhr)
 			}
@@ -123,7 +124,7 @@ export default function execute<T>(request: httpclient.Request): Promise<httpcli
 			xhr.ontimeout = xhr.onerror
 			xhr.onload = () => {
 				if (log?.isTraceEnabled()) {
-					log.trace(xhr.status + ' ' + traceMessage)
+					log.trace(`${xhr.status} ${traceMessage}`)
 				}
 				if (xhr.status >= 200 && xhr.status < 400) {
 					// Success!
