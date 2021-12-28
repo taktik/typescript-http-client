@@ -1,4 +1,4 @@
-import type { Logger } from 'log4javascript'
+import type { Logger } from 'generic-logger-typings'
 import FilterChainImpl from './filterChainImpl'
 
 /**

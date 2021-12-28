@@ -1,3 +1,4 @@
+import { LogLevel } from 'generic-logger-typings'
 import { Request, Response, getLogger, Headers } from './index'
 
 // Global function that takes a request (after being filtered), send it to the API and gives us its response
@@ -7,7 +8,7 @@ export default function execute<T>(request: Request): Promise<Response<T>> {
 	return new Promise<Response<T>>((resolve, reject) => {
 		let traceMessage = ''
 
-		if (log?.isTraceEnabled()) {
+		if (log?.isLevelEnabled(LogLevel.TRACE)) {
 			// Takes care of the logs
 			traceMessage = `${request.method} ${request.url}`
 			if (request.body) {
@@ -115,7 +116,7 @@ export default function execute<T>(request: Request): Promise<Response<T>> {
 
 			// Defining the main xmlHttpRequest properties (methods)
 			xhr.onerror = () => {
-				if (log?.isTraceEnabled()) {
+				if (log?.isLevelEnabled(LogLevel.TRACE)) {
 					log.trace(`${xhr.status} ${traceMessage}`)
 				}
 				rejectRequest(xhr)
@@ -123,7 +124,7 @@ export default function execute<T>(request: Request): Promise<Response<T>> {
 			xhr.onabort = xhr.onerror
 			xhr.ontimeout = xhr.onerror
 			xhr.onload = () => {
-				if (log?.isTraceEnabled()) {
+				if (log?.isLevelEnabled(LogLevel.TRACE)) {
 					log.trace(`${xhr.status} ${traceMessage}`)
 				}
 				if (xhr.status >= 200 && xhr.status < 400) {
