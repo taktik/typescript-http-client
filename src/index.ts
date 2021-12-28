@@ -1,4 +1,4 @@
-import type { Logger } from 'log4javascript'
+import type { Logger } from '@taktik/generic-logger'
 import FilterChainImpl from './filterChainImpl'
 
 /**

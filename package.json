@@ -1,6 +1,6 @@
 {
-	"name": "typescript-http-client",
-	"version": "0.10.3",
+	"name": "@taktik/typescript-http-client",
+	"version": "0.10.4",
 	"description": "",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -23,7 +23,7 @@
 	},
 	"homepage": "https://github.com/taktik/typescript-http-client#readme",
 	"dependencies": {
-		"log4javascript": "1.4.16"
+		"@taktik/generic-logger": "1.0.1"
 	},
 	"devDependencies": {
 		"@types/chai": "4.3.0",
