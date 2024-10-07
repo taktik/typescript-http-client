@@ -137,7 +137,13 @@ export default function execute<T>(request: Request): Promise<Response<T>> {
 			// Initializes the request
 			xhr.open(request.method, request.url)
 			// Copying the response type from the Request we received
-			xhr.responseType = request.responseType
+
+			try {
+				xhr.responseType = request.responseType
+			} catch (err) {
+				// setting not supported
+				xhr.responseType = ''
+			}
 
 			// Adapting the main XMLHttpRequest according to the passed Request
 			if (request.responseType === 'json') {
